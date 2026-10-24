@@ -47,6 +47,8 @@ echo "新版本：$VERSION (versionCode $NEW_CODE)"
 git add app/build.gradle.kts
 git commit -m "chore(me): 版本号 $VERSION ($NEW_CODE)"
 git tag "$VERSION"
-git push origin master
-git push origin "$VERSION"
+# 默认推 origin；需要临时换地址（例如带 token 的 https）时设 PUSH_REMOTE 环境变量
+REMOTE="${PUSH_REMOTE:-origin}"
+git push "$REMOTE" master
+git push "$REMOTE" "$VERSION"
 echo "已推送 tag $VERSION，去看 Actions 里的 Personal Release。"
