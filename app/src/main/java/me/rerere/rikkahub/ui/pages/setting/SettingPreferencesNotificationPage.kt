@@ -110,8 +110,8 @@ fun SettingPreferencesNotificationPage(vm: SettingVM = koinViewModel()) {
             contentPadding = contentPadding + PaddingValues(horizontal = 16.dp, vertical = 8.dp),
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
-            // Play 版由商店负责更新，个人版不接官方更新源，两者都不提供更新提醒
-            if (!BuildConfig.IS_PLAY_STORE && !BuildConfig.IS_FORK) {
+            // Play 版由商店负责更新，不提供更新提醒
+            if (!BuildConfig.IS_PLAY_STORE) {
                 item {
                     CardGroup {
                         item(
