@@ -38,13 +38,16 @@ jobs:
           distribution: temurin
           java-version: '21'
 
-      - name: Set up Android SDK
-        uses: android-actions/setup-android@v3
-
+      # runner 镜像自带 Android SDK 与 cmdline-tools，无需 android-actions/setup-android
+      # （那个 action 会执行 `sdkmanager "tools"`，该包已下架，会直接失败）
       - name: Install SDK components
         run: |
-          yes | sdkmanager --licenses > /dev/null || true
-          sdkmanager "platforms;android-37.2" "build-tools;37.0.0" "platform-tools"
+          set -euo pipefail
+          SDKM=$(command -v sdkmanager || ls "$ANDROID_HOME"/cmdline-tools/*/bin/sdkmanager | head -1)
+          echo "sdkmanager: $SDKM"
+          yes | "$SDKM" --licenses > /dev/null || true
+          "$SDKM" "platforms;android-37.2" "build-tools;37.0.0"
+          ls "$ANDROID_HOME/platforms"
 
       - name: Set up pnpm
         uses: pnpm/action-setup@v4
