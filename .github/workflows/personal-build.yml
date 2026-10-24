@@ -1,7 +1,8 @@
 name: Personal Build
 
-# 个人共存版的出包流水线：applicationId = com.rikkahub.me，桌面名 RikkaHub Me
-# debug 包不需要任何密钥；配置好签名 secrets 后会额外产出正式签名包
+# 个人共存版的日常出包：applicationId = com.rikkahub.me，桌面名 RikkaHub Me
+# 这里只出 debug 包，用来快速验证“能编译 + 身份正确”；
+# 正式签名包由 personal-release.yml 在打 tag 时产出。
 
 on:
   push:
@@ -21,9 +22,6 @@ jobs:
   build:
     runs-on: ubuntu-latest
     timeout-minutes: 90
-    env:
-      # secrets 不能直接写进 if，先折叠成 job 级 env 再判断
-      HAS_KEYSTORE: ${{ secrets.KEYSTORE_BASE64 != '' }}
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -96,42 +94,4 @@ jobs:
         with:
           name: rikkahub-me-debug
           path: app/build/outputs/apk/github/debug/*.apk
-          if-no-files-found: error
-
-      # 以下步骤只在配置了 KEYSTORE_BASE64 时执行
-      - name: Prepare signing config
-        if: env.HAS_KEYSTORE == 'true'
-        env:
-          # 通过环境变量传值，避免口令里的特殊字符被拼进脚本
-          KEYSTORE_BASE64: ${{ secrets.KEYSTORE_BASE64 }}
-          STORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
-          KEY_ALIAS: ${{ secrets.KEY_ALIAS }}
-          KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
-        run: |
-          set -euo pipefail
-          echo "$KEYSTORE_BASE64" | base64 -d > app/app.key
-          printf 'storeFile=app.key\nstorePassword=%s\nkeyAlias=%s\nkeyPassword=%s\n' \
-            "$STORE_PASSWORD" "$KEY_ALIAS" "$KEY_PASSWORD" > local.properties
-
-      - name: Assemble release APK
-        if: env.HAS_KEYSTORE == 'true'
-        run: ./gradlew assembleGithubRelease --stacktrace
-
-      - name: Verify release identity
-        if: env.HAS_KEYSTORE == 'true'
-        run: |
-          set -euo pipefail
-          APK=$(ls app/build/outputs/apk/github/release/*universal*.apk | head -1)
-          AAPT2="$(ls -d "$ANDROID_HOME"/build-tools/* | sort -V | tail -1)/aapt2"
-          BADGING=$("$AAPT2" dump badging "$APK")
-          echo "$BADGING" | head -3
-          echo "$BADGING" | grep -q "package: name='com.rikkahub.me'" \
-            || { echo "::error::release applicationId 不是 com.rikkahub.me"; exit 1; }
-
-      - name: Upload release APK
-        if: env.HAS_KEYSTORE == 'true'
-        uses: actions/upload-artifact@v4
-        with:
-          name: rikkahub-me-release
-          path: app/build/outputs/apk/github/release/*.apk
           if-no-files-found: error

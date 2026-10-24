@@ -1,0 +1,117 @@
+name: Personal Release
+
+# 打 tag（tag 必须等于 app/build.gradle.kts 里的 versionName，例如 3.1.2-me）时：
+# 用仓库 secrets 里的 keystore 签出正式包，发布成 GitHub Release。
+# 共存版的应用内更新读的就是本仓库的 releases/latest，所以这个流程产出的包才能自更新。
+
+on:
+  push:
+    tags:
+      - '[0-9]*'
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    timeout-minutes: 90
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          submodules: recursive
+
+      - name: Set up JDK 21
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
+
+      - name: Install SDK components
+        run: |
+          set -euo pipefail
+          SDKM=$(command -v sdkmanager || ls "$ANDROID_HOME"/cmdline-tools/*/bin/sdkmanager | head -1)
+          echo "sdkmanager: $SDKM"
+          yes | "$SDKM" --licenses > /dev/null || true
+          "$SDKM" "platforms;android-37.2" "build-tools;37.0.0"
+
+      - name: Set up pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 11
+
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+          cache-dependency-path: web-ui/pnpm-lock.yaml
+
+      - name: Install web-ui dependencies
+        working-directory: web-ui
+        run: pnpm install --frozen-lockfile
+
+      - name: Cache Gradle
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.gradle/caches
+            ~/.gradle/wrapper
+          key: ${{ runner.os }}-gradle-${{ hashFiles('**/*.gradle*', '**/gradle-wrapper.properties', 'gradle/libs.versions.toml') }}
+          restore-keys: |
+            ${{ runner.os }}-gradle-
+
+      # tag 与 versionName 不一致会让应用内更新的版本比较永远错位，这里直接拦下来
+      - name: Verify tag matches versionName
+        run: |
+          set -euo pipefail
+          TAG="${GITHUB_REF_NAME}"
+          VER=$(sed -n 's/^[[:space:]]*versionName = "\(.*\)"/\1/p' app/build.gradle.kts | head -1)
+          echo "tag=$TAG versionName=$VER"
+          [ -n "$VER" ] || { echo "::error::读取 versionName 失败"; exit 1; }
+          [ "$TAG" = "$VER" ] || { echo "::error::tag($TAG) 与 versionName($VER) 不一致"; exit 1; }
+
+      - name: Prepare signing config
+        env:
+          KEYSTORE_BASE64: ${{ secrets.KEYSTORE_BASE64 }}
+          STORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
+          KEY_ALIAS: ${{ secrets.KEY_ALIAS }}
+          KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
+        run: |
+          set -euo pipefail
+          [ -n "$KEYSTORE_BASE64" ] || { echo "::error::缺少 KEYSTORE_BASE64 secret"; exit 1; }
+          echo "$KEYSTORE_BASE64" | base64 -d > app/app.key
+          printf 'storeFile=app.key\nstorePassword=%s\nkeyAlias=%s\nkeyPassword=%s\n' \
+            "$STORE_PASSWORD" "$KEY_ALIAS" "$KEY_PASSWORD" > local.properties
+
+      - name: Assemble release APK
+        run: ./gradlew assembleGithubRelease --stacktrace
+
+      - name: Verify release identity
+        run: |
+          set -euo pipefail
+          APK=$(ls app/build/outputs/apk/github/release/*universal*.apk | head -1)
+          AAPT2="$(ls -d "$ANDROID_HOME"/build-tools/* | sort -V | tail -1)/aapt2"
+          BADGING=$("$AAPT2" dump badging "$APK")
+          echo "$BADGING" | head -3
+          echo "$BADGING" | grep -q "package: name='com.rikkahub.me'" \
+            || { echo "::error::release applicationId 不是 com.rikkahub.me"; exit 1; }
+          echo "$BADGING" | grep -q "application-label:'RikkaHub Me'" \
+            || { echo "::error::桌面名不是 RikkaHub Me"; exit 1; }
+
+      - name: Prepare release asset
+        run: |
+          set -euo pipefail
+          mkdir -p out
+          cp app/build/outputs/apk/github/release/*universal*.apk "out/rikkahub-me-${GITHUB_REF_NAME}.apk"
+          ls -lh out
+
+      - name: Publish release
+        uses: softprops/action-gh-release@v2
+        with:
+          name: RikkaHub Me ${{ github.ref_name }}
+          tag_name: ${{ github.ref_name }}
+          generate_release_notes: true
+          files: out/*.apk
