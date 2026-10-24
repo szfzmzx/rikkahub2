@@ -25,10 +25,10 @@ android {
         applicationId = "com.rikkahub.me"
         minSdk = 26
         targetSdk = 37
-        versionCode = 194
-        versionName = "3.1.1"
+        versionCode = 195
+        versionName = "3.1.2-me"
 
-        // 个人版标记：关闭只对官方发行版有意义的应用内更新检查
+        // 个人版标记：应用内更新改读自己仓库的 GitHub Releases
         buildConfigField("boolean", "IS_FORK", "true")
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
