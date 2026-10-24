@@ -206,6 +206,7 @@ class ChatVM(
     val updateState = settingsStore.settingsFlow
         .map { settings ->
             !BuildConfig.IS_PLAY_STORE &&
+                !BuildConfig.IS_FORK &&
                 !settings.init &&
                 settings.displaySetting.updateCheckDisabledUntilEpochMillis <= System.currentTimeMillis()
         }
