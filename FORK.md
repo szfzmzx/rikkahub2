@@ -6,6 +6,8 @@
 - 上游基线：`ad2c443`（v3.1.1）
 - 本版包名：`com.rikkahub.me`（debug 变体为 `com.rikkahub.me.debug`）
 - 本版桌面名：`RikkaHub Me`
+- 本版版本：`3.1.2-me`（versionCode 195）
+- 仓库：<https://github.com/szfzmzx/rikkahub2>
 
 ## 与官方版的差异
 
@@ -82,6 +84,16 @@ aapt2 校验 `applicationId` / 桌面名 → 把 `rikkahub-me-<tag>.apk` 发到 
 > 版本比较按 SemVer：`3.1.2-me` < `3.1.3-me`，`3.1.2-me` < `3.1.2`。`-me` 后缀只是标记，不影响排序，
 > 但 tag 里的版本号必须**单调递增**，否则更新卡片不会出现。
 
+已发布：`3.1.2-me`（versionCode 195）——首个个人版 release，资产 `rikkahub-me-3.1.2-me.apk`（约 18 MB universal 包）。
+
+### 回归测试
+
+`.github/workflows/personal-test.yml` 在每次推 `master` 时跑 `./gradlew test`（全模块 JVM 单元测试），
+和出包流水线分开看：**出包绿 ≠ 测试绿**。
+
+个人版自己的用例在 `app/src/test/java/me/rerere/rikkahub/utils/UpdateCheckerForkTest.kt`，
+锁定“GitHub Release JSON → `UpdateInfo`”的映射（apk 资产过滤、大小格式化、空正文/空时间兜底、`-me` 版本排序）。
+
 ### 签名密钥
 
 keystore 已生成并写入仓库 secrets（`KEYSTORE_BASE64` / `KEYSTORE_PASSWORD` / `KEY_ALIAS` / `KEY_PASSWORD`），
@@ -90,6 +102,19 @@ keystore 已生成并写入仓库 secrets（`KEYSTORE_BASE64` / `KEYSTORE_PASSWO
 > ⚠️ keystore 和口令丢了就再也无法覆盖升级已安装的 release 包，只能卸载重装。
 > **请把 `keystore/` 目录另行备份到安全的地方。**
 > 另外 debug 包与 release 包签名不同，二者不能互相覆盖，切换时需要先卸载。
+
+当前签名证书（`CN=RikkaHub Me, OU=Personal, O=RikkaHub Me, C=CN`）的 SHA-256 指纹：
+
+```
+2bfabeff12dbd9f556a02aeee2671733f10fa616fc0c11abb8cd97c1ca337314
+```
+
+每次发版流水线的 “Verify signature” 步骤都会打印它，应该始终是这一个值。
+想校验手动下载的 APK，不用装 Android SDK：
+
+```bash
+python3 tools/verify-apk-signature.py rikkahub-me-3.1.2-me.apk
+```
 
 ### 本地构建
 
@@ -132,6 +157,12 @@ git merge upstream/master
 上游若改版更新逻辑（`UpdateInfo` 字段、`Version` 比较规则），`fetchForkRelease()` 里把 GitHub Release 映射成
 `UpdateInfo` 的那段要跟着改；tag 与 `versionName` 的约定也不能变，否则更新卡片会算错版本。
 
+### 关于 `play` 渠道（有意保留）
+
+上游的 `github` / `play` 两个 flavor 保持原样：个人版 CI 只构建 `github` 渠道，`play` 渠道不产出任何东西。
+代码层面保留它，是为了让每次 `git merge upstream/master` 不用在 `build.gradle.kts` 的 flavor 块里反复解冲突；
+`IS_PLAY_STORE` 的判断也照旧（Play 版不检查更新、不显示更新提醒）。删掉它省不了多少体积，只会增加同步成本。
+
 ## 数据迁移
 
 - 官方版和本版是两套独立沙箱，装好后都是空的。
@@ -162,8 +193,8 @@ git merge upstream/master
 - [x] 关于页标注“个人版”与包名
 - [x] 版本号带 `-me` 后缀（当前 `3.1.2-me`）
 - [x] 应用内更新接自己的 GitHub Releases
+- [x] 把 `./gradlew test` 接进 CI（`Personal Test` 流水线）
 - [ ] 主题色 / 排版偏好
 - [ ] 默认模型、默认助手、默认提示词
 - [ ] 深链 scheme 与 Intent action 改成自己的（会失去与官方版二维码互通）
-- [ ] 移除 `play` flavor 与 `IS_PLAY_STORE` 相关分支
-- [ ] 把 `./gradlew test` 接进 CI
+- [~] 移除 `play` flavor —— 决定保留，理由见上文“关于 `play` 渠道”
