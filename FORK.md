@@ -6,7 +6,7 @@
 - 上游基线：`ad2c443`（v3.1.1）
 - 本版包名：`com.rikkahub.me`（debug 变体为 `com.rikkahub.me.debug`）
 - 本版桌面名：`RikkaHub Me`
-- 本版版本：`3.1.2-me`（versionCode 195）
+- 本版版本：`3.1.3-me`（versionCode 196）
 - 仓库：<https://github.com/szfzmzx/rikkahub2>
 
 ## 与官方版的差异
@@ -93,7 +93,12 @@ tools/cut-release.sh 3.1.3-me
 > 版本比较按 SemVer：`3.1.2-me` < `3.1.3-me`，`3.1.2-me` < `3.1.2`。`-me` 后缀只是标记，不影响排序，
 > 但 tag 里的版本号必须**单调递增**，否则更新卡片不会出现。
 
-已发布：`3.1.2-me`（versionCode 195）——首个个人版 release，资产 `rikkahub-me-3.1.2-me.apk`（约 18 MB universal 包）。
+已发布：
+
+- `3.1.2-me`（195）—— 首个个人版 release
+- `3.1.3-me`（196）—— 与当前 `master` 一致，含一键发版脚本与签名校验工具
+
+两个包的 v2 签名指纹一致（`2bfabeff…7314`），说明“下载新包 → 覆盖安装”这条链路是通的。
 
 ### 回归测试
 
@@ -122,7 +127,7 @@ keystore 已生成并写入仓库 secrets（`KEYSTORE_BASE64` / `KEYSTORE_PASSWO
 想校验手动下载的 APK，不用装 Android SDK：
 
 ```bash
-python3 tools/verify-apk-signature.py rikkahub-me-3.1.2-me.apk
+python3 tools/verify-apk-signature.py rikkahub-me-3.1.3-me.apk
 ```
 
 ### 本地构建
@@ -191,6 +196,16 @@ git merge upstream/master
   Firebase 的类名。ART 会忽略找不到的条目，功能无影响；真要重生成需要真机跑 `:app:baselineprofile`。
 - **崩溃排查**：移除 Crashlytics 后，未捕获异常只走 `CrashHandler` + logcat，用 `adb logcat` 看。
 
+## 验证记录（2026-10-25）
+
+| 检查 | 结果 |
+| --- | --- |
+| `Personal Build`（debug） | ✅ 连续多轮绿；aapt2 断言 `com.rikkahub.me.debug` + `RikkaHub Me` |
+| `Personal Test`（`./gradlew test`） | ✅ 494 个用例 0 失败（含新增的 3 个更新映射用例） |
+| `Personal Release`（tag `3.1.3-me`） | ✅ tag 校验 → 签名 → 身份校验 → 发布 Release 资产 |
+| 两个 release 的 v2 签名指纹 | ✅ 都是 `2bfabeff…7314`，可覆盖升级 |
+| `releases/latest` 映射 | ✅ 版本 `3.1.3-me`、1 个 apk 资产、约 17.5 MB |
+
 ## 许可证
 
 上游是 **AGPL-3.0**，本仓库保留原始 `LICENSE`。自己装机使用不受额外约束；一旦把 APK 分发给别人，
@@ -200,7 +215,7 @@ git merge upstream/master
 
 - [x] 启动器图标换成个人配色（`@color/ic_launcher_background_me`）
 - [x] 关于页标注“个人版”与包名
-- [x] 版本号带 `-me` 后缀（当前 `3.1.2-me`）
+- [x] 版本号带 `-me` 后缀（当前 `3.1.3-me`）
 - [x] 应用内更新接自己的 GitHub Releases
 - [x] 把 `./gradlew test` 接进 CI（`Personal Test` 流水线）
 - [ ] 主题色 / 排版偏好
