@@ -11,3 +11,9 @@ local.properties
 .cursor
 .history
 .kotlin
+
+# 个人版签名材料，绝不入库
+app/app.key
+*.jks
+*.keystore
+keystore.properties
