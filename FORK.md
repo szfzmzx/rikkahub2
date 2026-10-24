@@ -13,9 +13,10 @@
 | --- | --- | --- |
 | applicationId | `me.rerere.rikkahub` | `com.rikkahub.me` |
 | 桌面名 | RikkaHub | RikkaHub Me |
+| 启动图标 | 近黑背景 `#26262A` | 深青背景 `#0E4A44`（只换背景一层，前景不变） |
 | Firebase 统计 / 崩溃上报 | 有 | **已移除**（构建不再需要 `google-services.json`） |
-| 应用内更新检查 | 指向 `updates.rikka-ai.com` | **关闭**（`BuildConfig.IS_FORK`） |
-| 签名 | 官方 keystore | 你自己的 keystore；debug 包用 CI 的 debug key |
+| 应用内更新检查 | `updates.rikka-ai.com` | **本仓库的 GitHub Releases**（`releases/latest`，tag 即版本号） |
+| 签名 | 官方 keystore | 自己的 keystore（仓库 secrets 已配置），debug 包仅用于验证 |
 | `namespace` / Kotlin 包名 | `me.rerere.rikkahub` | **保持不变**（有意为之） |
 | 深链 / Intent action | `rikkahub://`、`me.rerere.rikkahub.action.*` | 保持不变（与官方版二维码互通） |
 
@@ -32,70 +33,62 @@ Android 的“包名”由 `applicationId` 决定，共存只需要它不同。`
 - `upstream` remote 指向官方仓库，用于同步。
 - 建议个人化改动一项一个 commit，信息前缀用 `feat(me):`，方便以后挑选或回滚。
 
-## 首次推送到你自己的 GitHub
+## 远程与提交身份
 
-本仓库已带完整历史，但 `origin` 还是空的：
-
-```bash
-git remote add origin git@github.com:<你的账号>/<你的仓库>.git
-git push -u origin master
-```
-
-推送后 `.github/workflows/personal-build.yml` 会自动开始构建。
-
-### 提交身份
-
-本仓库现有的 5 个 commit 是用占位身份 `RikkaHub Me <me@rikkahub.me>` 提交的（本机没有配置 git 身份）。
-推之前建议改成你自己，否则 GitHub 上不会关联到你的账号：
-
-```bash
-git config user.name "你的名字"
-git config user.email "你的邮箱"
-git rebase --exec 'git commit --amend --no-edit --reset-author' upstream/master
-```
+- `origin` = `https://github.com/szfzmzx/rikkahub2.git`（个人版仓库）
+- `upstream` = `https://github.com/rikkahub/rikkahub.git`（官方仓库，用于同步）
+- 提交身份已统一为 `szfzmzx <264301070+szfzmzx@users.noreply.github.com>`
 
 ### 关于 spotless
 
 根 `build.gradle.kts` 里 `spotless { ratchetFrom("origin/master") }` 需要存在 `origin/master` 这个 ref。
-推送到你自己的仓库并 `git fetch origin` 之后就有了；在还没有 origin 的本地环境跑 `spotlessCheck` 会报找不到 revision。
+本仓库里已经有对应的远端跟踪 ref；换一台机器 clone 后 `git fetch origin` 就有了，
+否则本地跑 `spotlessCheck` 会报找不到 revision。
 
 ## 出包
 
-### CI（推荐）
+### 日常验证（debug，CI）
 
-推到 `master`（或手动触发 `Personal Build`）后：
+推到 `master`（或手动触发 `Personal Build`）后，Actions → `Personal Build` → 最近一次运行 → 页面底部 **Artifacts**：
 
-1. Actions → `Personal Build` → 最近一次运行 → 页面底部 **Artifacts**
-2. `rikkahub-me-debug` 里有三个 APK（`universal` / `arm64-v8a` / `x86_64`），**装 `universal` 那个**
-3. 流水线里带身份断言：APK 的 `applicationId` 和桌面名不符合预期会直接失败，不会产出错误产物
+- `rikkahub-me-debug` 里有三个 APK（`universal` / `arm64-v8a` / `x86_64`），包名是 `com.rikkahub.me.debug`
+- 流水线带身份断言：`applicationId` 和桌面名不符合预期会直接失败，不会产出错误产物
+- ⚠️ debug 包的签名 key 由 GitHub runner 每次重新生成，**不同次构建的 debug 包不能互相覆盖升级**，只适合临时试装
 
 CI 会自己准备 JDK 21、Android SDK `platforms;android-37.2`、`build-tools;37.0.0`、Node 22 + pnpm 11，
 并拉取 `material3/material-color-utilities` 子模块。
 
-### 正式签名的 release 包
+### 发版（release，签名 + 自动发布）
 
-debug 包可以直接装，但签名是 CI 的 debug key。想要“正经”的 `com.rikkahub.me`（无 `.debug` 后缀），
-先生成一个自己的 keystore 并备份好：
+正式包由 `.github/workflows/personal-release.yml` 产出，触发条件是**推一个和 `versionName` 完全相同的 tag**：
 
 ```bash
-keytool -genkeypair -v \
-  -keystore rikkahub-me.jks \
-  -alias rikkahub-me \
-  -keyalg RSA -keysize 4096 -validity 10000
+# 1. 改版本号（versionCode 与 versionName 一起加）
+#    app/build.gradle.kts: versionCode = 196, versionName = "3.1.3-me"
+git commit -am "chore(me): 版本号 3.1.3-me (196)"
+git push origin master
+
+# 2. 打同名 tag 并推送
+git tag 3.1.3-me
+git push origin 3.1.3-me
 ```
 
-再在仓库 Settings → Secrets and variables → Actions 里加四个 secret：
+tag 推送后会依次：校验 tag == `versionName` → 用 secrets 里的 keystore 签 `assembleGithubRelease` →
+aapt2 校验 `applicationId` / 桌面名 → 把 `rikkahub-me-<tag>.apk` 发到 GitHub Releases（自动生成变更说明）。
 
-| Secret | 内容 |
-| --- | --- |
-| `KEYSTORE_BASE64` | `base64 -w0 rikkahub-me.jks` 的输出 |
-| `KEYSTORE_PASSWORD` | keystore 口令 |
-| `KEY_ALIAS` | `rikkahub-me` |
-| `KEY_PASSWORD` | key 口令 |
+发布完成后，手机上装的旧版本打开抽屉就能看到更新卡片（应用内更新读本仓库 `releases/latest`），
+点一下走系统 DownloadManager 下载并安装。
 
-配好后再跑一次流水线，会额外产出 `rikkahub-me-release`。
+> 版本比较按 SemVer：`3.1.2-me` < `3.1.3-me`，`3.1.2-me` < `3.1.2`。`-me` 后缀只是标记，不影响排序，
+> 但 tag 里的版本号必须**单调递增**，否则更新卡片不会出现。
+
+### 签名密钥
+
+keystore 已生成并写入仓库 secrets（`KEYSTORE_BASE64` / `KEYSTORE_PASSWORD` / `KEY_ALIAS` / `KEY_PASSWORD`），
+本地备份在工作区的 `keystore/` 目录（`rikkahub-me.jks` + `password.txt`，权限 600，不在仓库里、不会被提交）。
 
 > ⚠️ keystore 和口令丢了就再也无法覆盖升级已安装的 release 包，只能卸载重装。
+> **请把 `keystore/` 目录另行备份到安全的地方。**
 > 另外 debug 包与 release 包签名不同，二者不能互相覆盖，切换时需要先卸载。
 
 ### 本地构建
@@ -130,11 +123,14 @@ git merge upstream/master
 - `app/build.gradle.kts`（applicationId、`IS_FORK`、Firebase 依赖）
 - `app/src/main/java/me/rerere/rikkahub/di/AppModule.kt`、`di/ViewModelModule.kt`
 - `app/src/main/java/me/rerere/rikkahub/ui/pages/chat/ChatVM.kt`、`ChatDrawer.kt`
-- `app/src/main/java/me/rerere/rikkahub/ui/pages/setting/SettingPreferencesNotificationPage.kt`
-- `app/src/main/res/values*/strings.xml` 的 `app_name`
+- `app/src/main/java/me/rerere/rikkahub/ui/pages/setting/SettingPreferencesNotificationPage.kt`、`SettingAboutPage.kt`
+- `app/src/main/java/me/rerere/rikkahub/utils/UpdateChecker.kt`（fork 更新源）
+- `app/src/main/res/values*/strings.xml` 的 `app_name` 与 `about_page_*`
+- `app/src/main/res/values/colors.xml`、`mipmap-anydpi-v26/ic_launcher.xml`
 - `.github/workflows/`
 
-上游以后若新增更新入口，记得在新位置补 `!BuildConfig.IS_FORK`，否则共存版又会提示安装官方包。
+上游若改版更新逻辑（`UpdateInfo` 字段、`Version` 比较规则），`fetchForkRelease()` 里把 GitHub Release 映射成
+`UpdateInfo` 的那段要跟着改；tag 与 `versionName` 的约定也不能变，否则更新卡片会算错版本。
 
 ## 数据迁移
 
@@ -145,7 +141,9 @@ git merge upstream/master
 
 ## 已知差异与限制
 
-- **debug 后缀**：CI 默认产物的包名是 `com.rikkahub.me.debug`，和正式包可以同时存在，但两者内容不共享。
+- **更新源**：应用内更新走 `api.github.com`，国内网络可能需要代理；请求失败或被限流时按“无更新”处理，不会弹错误卡片。
+- **debug 后缀**：CI 日常产物的包名是 `com.rikkahub.me.debug`，和正式包可以同时存在，但两者数据不共享。
+- **debug 包签名**：CI 每次用新生成的 debug key，多次构建的 debug 包互相装不上，长期使用请装 release 包。
 - **深链冲突**：两版都注册 `rikkahub://`，扫供应商二维码导入时会弹系统选择器；保留 scheme 是为了和官方版互通二维码。
 - **Web 服务器端口**：默认 8080，两版同时开启会抢占端口，在设置里改一个即可。
 - **mDNS 名称**：默认 `rikkahub`，两版同时开启局域网服务时 jmDNS 会自动加后缀，不影响使用。
@@ -158,12 +156,14 @@ git merge upstream/master
 上游是 **AGPL-3.0**，本仓库保留原始 `LICENSE`。自己装机使用不受额外约束；一旦把 APK 分发给别人，
 需要同时提供完整对应源码（AGPL 第 13 条对网络服务同样适用），并且不要以官方名义发布。
 
-## 下一步个人化清单（尚未做）
+## 下一步个人化清单
 
-- [ ] 启动器图标 / 启动图（`ic_launcher_background` 目前是接近纯色的 `#26262A`，换成 `@color/...` 即可，无需改 PNG）
+- [x] 启动器图标换成个人配色（`@color/ic_launcher_background_me`）
+- [x] 关于页标注“个人版”与包名
+- [x] 版本号带 `-me` 后缀（当前 `3.1.2-me`）
+- [x] 应用内更新接自己的 GitHub Releases
 - [ ] 主题色 / 排版偏好
-- [ ] 关于页署名、版本号后缀（`versionName` 目前跟上游一致）
 - [ ] 默认模型、默认助手、默认提示词
 - [ ] 深链 scheme 与 Intent action 改成自己的（会失去与官方版二维码互通）
-- [ ] 接自己的更新源（`UpdateChecker` 的 `API_URL` 与 `IS_FORK` 判断）
 - [ ] 移除 `play` flavor 与 `IS_PLAY_STORE` 相关分支
+- [ ] 把 `./gradlew test` 接进 CI
