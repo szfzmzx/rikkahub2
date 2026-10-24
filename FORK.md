@@ -78,6 +78,12 @@ git push origin 3.1.3-me
 tag 推送后会依次：校验 tag == `versionName` → 用 secrets 里的 keystore 签 `assembleGithubRelease` →
 aapt2 校验 `applicationId` / 桌面名 → 把 `rikkahub-me-<tag>.apk` 发到 GitHub Releases（自动生成变更说明）。
 
+嫌手动改两处麻烦，可以用脚本一步到位（自动 `versionCode + 1`、提交、打 tag、推 master 和 tag）：
+
+```bash
+tools/cut-release.sh 3.1.3-me
+```
+
 发布完成后，手机上装的旧版本打开抽屉就能看到更新卡片（应用内更新读本仓库 `releases/latest`），
 点一下走系统 DownloadManager 下载并安装。
 
