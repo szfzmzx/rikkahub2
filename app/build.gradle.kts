@@ -23,11 +23,15 @@ android {
     }
 
     defaultConfig {
-        applicationId = "me.rerere.rikkahub"
+        // 个人共存版：独立 applicationId，可与官方版 me.rerere.rikkahub 同机安装
+        applicationId = "com.rikkahub.me"
         minSdk = 26
         targetSdk = 37
         versionCode = 194
         versionName = "3.1.1"
+
+        // 个人版标记：关闭只对官方发行版有意义的应用内更新检查
+        buildConfigField("boolean", "IS_FORK", "true")
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
 

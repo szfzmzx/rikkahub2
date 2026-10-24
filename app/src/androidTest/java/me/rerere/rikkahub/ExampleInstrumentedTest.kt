@@ -17,6 +17,7 @@ class ExampleInstrumentedTest {
     fun useAppContext() {
         // Context of the app under test.
         val appContext = InstrumentationRegistry.getInstrumentation().targetContext
-        assertEquals("me.rerere.rikkahub", appContext.packageName)
+        // applicationId 会随变体（debug 带 .debug 后缀）变化，这里跟随构建配置而不是写死
+        assertEquals(BuildConfig.APPLICATION_ID, appContext.packageName)
     }
 }
