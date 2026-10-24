@@ -97,20 +97,7 @@ class UpdateChecker(
             if (response.code == 404) return noUpdate
             if (!response.isSuccessful) throw Exception("GitHub Releases HTTP ${response.code}")
             val release = json.decodeFromString<GitHubRelease>(response.body.string())
-            UpdateInfo(
-                version = release.tagName.trim().removePrefix("v"),
-                publishedAt = release.publishedAt.ifBlank { java.time.Instant.now().toString() },
-                changelog = release.body.ifBlank { "RikkaHub Me ${release.tagName}" },
-                downloads = release.assets
-                    .filter { it.name.endsWith(".apk", ignoreCase = true) }
-                    .map {
-                        UpdateDownload(
-                            name = it.name,
-                            url = it.browserDownloadUrl,
-                            size = formatSize(it.size),
-                        )
-                    },
-            )
+            gitHubReleaseToUpdateInfo(release, java.time.Instant.now().toString())
         } catch (e: CancellationException) {
             throw e
         } catch (e: Exception) {
@@ -160,7 +147,7 @@ data class UpdateInfo(
 )
 
 @Serializable
-private data class GitHubRelease(
+internal data class GitHubRelease(
     @SerialName("tag_name") val tagName: String = "",
     @SerialName("body") val body: String = "",
     @SerialName("published_at") val publishedAt: String = "",
@@ -168,11 +155,33 @@ private data class GitHubRelease(
 )
 
 @Serializable
-private data class GitHubAsset(
+internal data class GitHubAsset(
     @SerialName("name") val name: String = "",
     @SerialName("browser_download_url") val browserDownloadUrl: String = "",
     @SerialName("size") val size: Long = 0L,
 )
+
+/**
+ * 把 GitHub Release 映射成应用内更新用的 [UpdateInfo]。
+ *
+ * tag 直接当版本号（发布时保证 tag == versionName），只保留 `.apk` 资产；
+ * 正文为空时给一句兜底说明，避免更新卡片里的变更说明一片空白。
+ */
+internal fun gitHubReleaseToUpdateInfo(release: GitHubRelease, fallbackNow: String): UpdateInfo =
+    UpdateInfo(
+        version = release.tagName.trim().removePrefix("v"),
+        publishedAt = release.publishedAt.ifBlank { fallbackNow },
+        changelog = release.body.ifBlank { "RikkaHub Me ${release.tagName}" },
+        downloads = release.assets
+            .filter { it.name.endsWith(".apk", ignoreCase = true) }
+            .map {
+                UpdateDownload(
+                    name = it.name,
+                    url = it.browserDownloadUrl,
+                    size = formatSize(it.size),
+                )
+            },
+    )
 
 private fun formatSize(bytes: Long): String {
     if (bytes <= 0L) return ""
