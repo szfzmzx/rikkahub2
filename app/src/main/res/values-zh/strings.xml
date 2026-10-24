@@ -1,7 +1,9 @@
 <?xml version='1.0' encoding='UTF-8'?>
 <resources>
+  <string name="about_page_app_id">应用包名</string>
   <string name="about_page_github">Github</string>
   <string name="about_page_license">License</string>
+  <string name="about_page_personal_build">个人版</string>
   <string name="about_page_system">系统</string>
   <string name="about_page_title">关于</string>
   <string name="about_page_version">版本</string>

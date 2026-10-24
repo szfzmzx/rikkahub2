@@ -185,9 +185,19 @@ fun SettingAboutPage() {
                             ),
                             leadingContent = { CardGroupIcon(HugeIcons.Code, containerColor = containerColor, contentColor = contentColor) },
                             supportingContent = {
-                                Text("${BuildConfig.VERSION_NAME} / ${BuildConfig.VERSION_CODE}")
+                                Text(
+                                    "${BuildConfig.VERSION_NAME} / ${BuildConfig.VERSION_CODE} · " +
+                                        stringResource(R.string.about_page_personal_build)
+                                )
                             },
                             headlineContent = { Text(stringResource(R.string.about_page_version)) },
+                        )
+                        item(
+                            leadingContent = { CardGroupIcon(HugeIcons.SmartPhone01, containerColor = containerColor, contentColor = contentColor) },
+                            supportingContent = {
+                                Text(BuildConfig.APPLICATION_ID)
+                            },
+                            headlineContent = { Text(stringResource(R.string.about_page_app_id)) },
                         )
                         item(
                             leadingContent = { CardGroupIcon(HugeIcons.SmartPhone01, containerColor = containerColor, contentColor = contentColor) },
