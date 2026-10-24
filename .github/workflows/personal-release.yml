@@ -101,6 +101,14 @@ jobs:
           echo "$BADGING" | grep -q "application-label:'RikkaHub Me'" \
             || { echo "::error::桌面名不是 RikkaHub Me"; exit 1; }
 
+      # 打印签名证书指纹：每次发版都应一致，否则老版本无法覆盖升级
+      - name: Verify signature
+        run: |
+          set -euo pipefail
+          APK=$(ls app/build/outputs/apk/github/release/*universal*.apk | head -1)
+          APKSIGNER="$(ls -d "$ANDROID_HOME"/build-tools/* | sort -V | tail -1)/apksigner"
+          "$APKSIGNER" verify --print-certs "$APK" | head -12
+
       - name: Prepare release asset
         run: |
           set -euo pipefail
