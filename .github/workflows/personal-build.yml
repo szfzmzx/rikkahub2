@@ -1,0 +1,134 @@
+name: Personal Build
+
+# 个人共存版的出包流水线：applicationId = com.rikkahub.me，桌面名 RikkaHub Me
+# debug 包不需要任何密钥；配置好签名 secrets 后会额外产出正式签名包
+
+on:
+  push:
+    branches: [master]
+    paths-ignore:
+      - '**.md'
+  workflow_dispatch:
+
+concurrency:
+  group: personal-build-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 90
+    env:
+      # secrets 不能直接写进 if，先折叠成 job 级 env 再判断
+      HAS_KEYSTORE: ${{ secrets.KEYSTORE_BASE64 != '' }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          # material3 依赖 material-color-utilities 子模块
+          submodules: recursive
+
+      - name: Set up JDK 21
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
+
+      - name: Set up Android SDK
+        uses: android-actions/setup-android@v3
+
+      - name: Install SDK components
+        run: |
+          yes | sdkmanager --licenses > /dev/null || true
+          sdkmanager "platforms;android-37.2" "build-tools;37.0.0" "platform-tools"
+
+      - name: Set up pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 11
+
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+          cache-dependency-path: web-ui/pnpm-lock.yaml
+
+      # :web 的 preBuild 会跑 pnpm run build，这里先把依赖装好
+      - name: Install web-ui dependencies
+        working-directory: web-ui
+        run: pnpm install --frozen-lockfile
+
+      - name: Cache Gradle
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.gradle/caches
+            ~/.gradle/wrapper
+          key: ${{ runner.os }}-gradle-${{ hashFiles('**/*.gradle*', '**/gradle-wrapper.properties', 'gradle/libs.versions.toml') }}
+          restore-keys: |
+            ${{ runner.os }}-gradle-
+
+      - name: Assemble debug APK
+        run: ./gradlew assembleGithubDebug --stacktrace
+
+      - name: Verify debug identity
+        run: |
+          set -euo pipefail
+          APK=$(ls app/build/outputs/apk/github/debug/*universal*.apk | head -1)
+          AAPT2="$(ls -d "$ANDROID_HOME"/build-tools/* | sort -V | tail -1)/aapt2"
+          BADGING=$("$AAPT2" dump badging "$APK")
+          echo "$BADGING" | head -3
+          echo "$BADGING" | grep -q "package: name='com.rikkahub.me.debug'" \
+            || { echo "::error::applicationId 不是 com.rikkahub.me.debug"; exit 1; }
+          echo "$BADGING" | grep -q "application-label:'RikkaHub Me'" \
+            || { echo "::error::桌面名不是 RikkaHub Me"; exit 1; }
+
+      - name: Upload debug APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: rikkahub-me-debug
+          path: app/build/outputs/apk/github/debug/*.apk
+          if-no-files-found: error
+
+      # 以下步骤只在配置了 KEYSTORE_BASE64 时执行
+      - name: Prepare signing config
+        if: env.HAS_KEYSTORE == 'true'
+        env:
+          # 通过环境变量传值，避免口令里的特殊字符被拼进脚本
+          KEYSTORE_BASE64: ${{ secrets.KEYSTORE_BASE64 }}
+          STORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
+          KEY_ALIAS: ${{ secrets.KEY_ALIAS }}
+          KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
+        run: |
+          set -euo pipefail
+          echo "$KEYSTORE_BASE64" | base64 -d > app/app.key
+          printf 'storeFile=app.key\nstorePassword=%s\nkeyAlias=%s\nkeyPassword=%s\n' \
+            "$STORE_PASSWORD" "$KEY_ALIAS" "$KEY_PASSWORD" > local.properties
+
+      - name: Assemble release APK
+        if: env.HAS_KEYSTORE == 'true'
+        run: ./gradlew assembleGithubRelease --stacktrace
+
+      - name: Verify release identity
+        if: env.HAS_KEYSTORE == 'true'
+        run: |
+          set -euo pipefail
+          APK=$(ls app/build/outputs/apk/github/release/*universal*.apk | head -1)
+          AAPT2="$(ls -d "$ANDROID_HOME"/build-tools/* | sort -V | tail -1)/aapt2"
+          BADGING=$("$AAPT2" dump badging "$APK")
+          echo "$BADGING" | head -3
+          echo "$BADGING" | grep -q "package: name='com.rikkahub.me'" \
+            || { echo "::error::release applicationId 不是 com.rikkahub.me"; exit 1; }
+
+      - name: Upload release APK
+        if: env.HAS_KEYSTORE == 'true'
+        uses: actions/upload-artifact@v4
+        with:
+          name: rikkahub-me-release
+          path: app/build/outputs/apk/github/release/*.apk
+          if-no-files-found: error
