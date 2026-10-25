@@ -1701,6 +1701,8 @@
   <string name="workspace_ssh_editor_username">Username</string>
   <string name="workspace_ssh_editor_auth">Authentication</string>
   <string name="workspace_ssh_editor_auth_method">Method</string>
+  <string name="workspace_ssh_editor_auth_none">None</string>
+  <string name="workspace_ssh_editor_auth_none_desc">Server lets you log in without a password or key</string>
   <string name="workspace_ssh_editor_password">Password</string>
   <string name="workspace_ssh_editor_private_key">Private key</string>
   <string name="workspace_ssh_editor_saved_keep">Saved. Leave empty to keep it</string>

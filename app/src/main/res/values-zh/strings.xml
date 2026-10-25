@@ -1703,6 +1703,8 @@ mDNS 地址：使用 .local 主机名，同一网络中的其他设备可通过�
   <string name="workspace_ssh_editor_username">用户名</string>
   <string name="workspace_ssh_editor_auth">认证</string>
   <string name="workspace_ssh_editor_auth_method">认证方式</string>
+  <string name="workspace_ssh_editor_auth_none">无认证</string>
+  <string name="workspace_ssh_editor_auth_none_desc">服务器允许直接登录，不需要密码或密钥</string>
   <string name="workspace_ssh_editor_password">密码</string>
   <string name="workspace_ssh_editor_private_key">私钥</string>
   <string name="workspace_ssh_editor_saved_keep">已保存，留空保持不变</string>

@@ -1698,6 +1698,8 @@
   <string name="workspace_ssh_editor_username">Имя пользователя</string>
   <string name="workspace_ssh_editor_auth">Аутентификация</string>
   <string name="workspace_ssh_editor_auth_method">Метод</string>
+  <string name="workspace_ssh_editor_auth_none">Нет</string>
+  <string name="workspace_ssh_editor_auth_none_desc">Сервер разрешает вход без пароля и ключа</string>
   <string name="workspace_ssh_editor_password">Пароль</string>
   <string name="workspace_ssh_editor_private_key">Закрытый ключ</string>
   <string name="workspace_ssh_editor_saved_keep">Сохранено. Оставьте пустым, чтобы оставить без изменений</string>

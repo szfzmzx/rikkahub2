@@ -176,6 +176,7 @@ fun WorkspaceSshEditorPage(id: String?) {
                         val options = listOf(
                             SshAuthType.PASSWORD to stringResource(R.string.workspace_ssh_editor_password),
                             SshAuthType.PRIVATE_KEY to stringResource(R.string.workspace_ssh_editor_private_key),
+                            SshAuthType.NONE to stringResource(R.string.workspace_ssh_editor_auth_none),
                         )
                         SingleChoiceSegmentedButtonRow(modifier = Modifier.fillMaxWidth()) {
                             options.forEachIndexed { index, (type, label) ->
@@ -246,6 +247,12 @@ fun WorkspaceSshEditorPage(id: String?) {
                                 )
                             }
                         }
+
+                        // 服务器对 "none" 认证直接放行, 不需要填任何凭据
+                        SshAuthType.NONE -> formItem(
+                            headlineContent = { Text(stringResource(R.string.workspace_ssh_editor_auth_none)) },
+                            supportingContent = { Text(stringResource(R.string.workspace_ssh_editor_auth_none_desc)) },
+                        ) {}
                     }
                 }
             }

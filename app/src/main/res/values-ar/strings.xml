@@ -1696,6 +1696,8 @@
   <string name="workspace_ssh_editor_username">اسم المستخدم</string>
   <string name="workspace_ssh_editor_auth">المصادقة</string>
   <string name="workspace_ssh_editor_auth_method">الطريقة</string>
+  <string name="workspace_ssh_editor_auth_none">بدون مصادقة</string>
+  <string name="workspace_ssh_editor_auth_none_desc">يسمح الخادم بتسجيل الدخول دون كلمة مرور أو مفتاح</string>
   <string name="workspace_ssh_editor_password">كلمة المرور</string>
   <string name="workspace_ssh_editor_private_key">المفتاح الخاص</string>
   <string name="workspace_ssh_editor_saved_keep">محفوظ. اتركه فارغًا لإبقائه دون تغيير</string>

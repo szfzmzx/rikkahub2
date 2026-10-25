@@ -1649,6 +1649,8 @@
   <string name="workspace_ssh_editor_title_new">Neuer SSH-Arbeitsbereich</string>
   <string name="workspace_ssh_editor_auth">Authentifizierung</string>
   <string name="workspace_ssh_editor_auth_method">Methode</string>
+  <string name="workspace_ssh_editor_auth_none">Keine</string>
+  <string name="workspace_ssh_editor_auth_none_desc">Der Server erlaubt die Anmeldung ohne Passwort oder Schlüssel</string>
   <string name="workspace_ssh_editor_password">Passwort</string>
   <string name="workspace_ssh_editor_private_key">Privater Schlüssel</string>
   <string name="workspace_ssh_editor_saved_keep">Gespeichert. Leer lassen, um ihn beizubehalten</string>

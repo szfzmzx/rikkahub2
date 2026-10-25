@@ -1698,6 +1698,8 @@ mDNSアドレス: .localホスト名を使用し、IPを知らなくても同じ
   <string name="workspace_ssh_editor_username">ユーザー名</string>
   <string name="workspace_ssh_editor_auth">認証</string>
   <string name="workspace_ssh_editor_auth_method">方法</string>
+  <string name="workspace_ssh_editor_auth_none">なし</string>
+  <string name="workspace_ssh_editor_auth_none_desc">サーバーはパスワードや鍵なしでのログインを許可しています</string>
   <string name="workspace_ssh_editor_password">パスワード</string>
   <string name="workspace_ssh_editor_private_key">秘密鍵</string>
   <string name="workspace_ssh_editor_saved_keep">保存済み。空欄のままにすると変更されません</string>

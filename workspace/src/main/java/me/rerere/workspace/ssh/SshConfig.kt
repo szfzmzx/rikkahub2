@@ -8,6 +8,14 @@ import java.util.Base64
 enum class SshAuthType {
     PASSWORD,
     PRIVATE_KEY,
+
+    /**
+     * 无认证: 服务器对 SSH 的 "none" 认证直接放行, 不需要密码也不需要密钥。
+     *
+     * 常见于托管沙箱 (例如 instabox), 用户只拿到 "主机 + 端口 + 用户名"。
+     * 个人版新增, 上游只有 [PASSWORD] 和 [PRIVATE_KEY]。
+     */
+    NONE,
 }
 
 /** 已信任的主机公钥 */

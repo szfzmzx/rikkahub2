@@ -239,6 +239,9 @@ internal class SshConnection private constructor(
                         throw IOException("Invalid SSH private key or passphrase: ${e.message}", e)
                     }
                 }
+
+                // 服务器对 "none" 认证直接放行, 无需任何凭据
+                SshAuthType.NONE -> Unit
             }
 
             val hostKeys = TrustedHostKeyRepository(config.hostKey)
@@ -253,6 +256,8 @@ internal class SshConnection private constructor(
                     }
 
                     SshAuthType.PRIVATE_KEY -> setConfig("PreferredAuthentications", "publickey")
+
+                    SshAuthType.NONE -> setConfig("PreferredAuthentications", "none")
                 }
                 setServerAliveInterval(KEEPALIVE_INTERVAL_MS)
                 serverAliveCountMax = KEEPALIVE_COUNT_MAX
