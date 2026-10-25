@@ -21,6 +21,25 @@
 | 签名 | 官方 keystore | 自己的 keystore（仓库 secrets 已配置），debug 包仅用于验证 |
 | `namespace` / Kotlin 包名 | `me.rerere.rikkahub` | **保持不变**（有意为之） |
 | 深链 / Intent action | `rikkahub://`、`me.rerere.rikkahub.action.*` | 保持不变（与官方版二维码互通） |
+| SSH 工作区认证方式 | 密码 / 私钥 | 密码 / 私钥 / **无认证**（个人版新增） |
+
+### 个人版新增：SSH「无认证」登录
+
+托管沙箱（如 instabox）只给「主机 + 端口 + 用户名」，服务器对 SSH 的 `none` 认证直接放行，
+既不需要密码也不需要密钥。上游只有 `PASSWORD` 和 `PRIVATE_KEY` 两种方式，密码留空会被
+`SshConnection.open()` 里的 `if (config.password.isNullOrEmpty()) throw IOException("SSH password is required")`
+直接拦下，所以这类服务器根本连不上（不是网络问题，也不是认证失败）。
+
+本版新增 `SshAuthType.NONE`：不校验凭据、不设置 password/userInfo，
+`PreferredAuthentications` 设为 `none`；编辑页的认证方式变成三选一，选中「无认证」时不显示任何凭据输入框。
+`WorkspaceRepository.toSettings()` 本来就把非密码/非私钥类型的凭据落成 `null`，无需改动。
+
+实测（JSch 2.28.8，就是 app 用的那个库）：`PreferredAuthentications=none` 下
+`connect` / `exec` channel / `sftp` channel 全部可用，SFTP 能读到 `$HOME` 和目录列表，
+所以命令执行和文件读写两条链路都是通的。
+
+用法：新建 SSH 工作区 → 认证方式选「无认证」→ 填主机、端口、用户名即可，
+工作目录留空会在测试连接后自动填成远端家目录。
 
 ### 为什么只改 `applicationId`
 
