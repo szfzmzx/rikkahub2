@@ -51,6 +51,26 @@
 > 服务器只认 `none` 时，**只要客户端加载了任何密钥就会失败**
 > （JSch 报 `Auth fail for methods 'publickey'`），此时必须用「无认证」模式且不填密钥。
 
+### 已跑通的 SSH 沙箱配置（instabox）
+
+| 字段 | 值 |
+| --- | --- |
+| 主机 | `ssh.instabox.sh`（注意不是 `api.instabox.sh`，那是另一个入口） |
+| 端口 | `2222` |
+| 用户名 | 面板给的那串 `ibssh_...`，每个沙箱不同 |
+| 认证方式 | **私钥** |
+| 私钥口令 | 留空 |
+| 工作目录 | 留空，测试连接后自动填 `/data/home` |
+
+要点：
+
+- 先在 `https://dashboard.instabox.sh/` 登记公钥，再在 app 里用私钥模式，这样不受服务器
+  「空手登录窗口」开关的影响。**把面板里那把 key 删掉就等于把自己锁在门外**（本项目实际踩过）。
+- 主机指纹（`ssh.instabox.sh:2222`，ed25519）：`SHA256:DQYkbhc9iBYcfVvhXZBsT9qhzAyLvLIyjmm57Vimfxk`
+- 实测通过：JSch 2.28.8 + `PreferredAuthentications=publickey` 下 connect / exec / sftp 全可用，
+  远端是 `Linux 6.18.54-instabox`，用户 `dev`，家目录 `/data/home`。
+- 密钥对备份在开发机的 `keys/`（不在仓库里，`.gitignore` 未收录私有材料）。
+
 ### 为什么只改 `applicationId`
 
 Android 的“包名”由 `applicationId` 决定，共存只需要它不同。`namespace` 与 Kotlin 包名一旦改动，会牵动
