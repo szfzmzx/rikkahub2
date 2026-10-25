@@ -41,6 +41,16 @@
 用法：新建 SSH 工作区 → 认证方式选「无认证」→ 填主机、端口、用户名即可，
 工作目录留空会在测试连接后自动填成远端家目录。
 
+> ⚠️ 实测记录：instabox 的 `none` 放行是**有窗口的**。2026-10-25 21:44 还能用
+> （OpenSSH 与 JSch 都能登录、能列目录），22:47 同一个用户名已经变成
+> `Permission denied (publickey)`，两个 IP 都一样。所以「测试连接通过、点信任后失败」
+> 不是本版的 bug，是服务器在两个请求之间改了策略。
+>
+> 若要用这类沙箱，稳妥做法是去 `https://dashboard.instabox.sh/` 登记一把公钥，
+> 然后在 app 里改用「私钥」模式。关于「私钥模式下会先试 publickey」的一个副作用：
+> 服务器只认 `none` 时，**只要客户端加载了任何密钥就会失败**
+> （JSch 报 `Auth fail for methods 'publickey'`），此时必须用「无认证」模式且不填密钥。
+
 ### 为什么只改 `applicationId`
 
 Android 的“包名”由 `applicationId` 决定，共存只需要它不同。`namespace` 与 Kotlin 包名一旦改动，会牵动
