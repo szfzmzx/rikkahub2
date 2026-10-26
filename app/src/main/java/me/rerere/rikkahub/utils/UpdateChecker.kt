@@ -171,7 +171,7 @@ internal fun gitHubReleaseToUpdateInfo(release: GitHubRelease, fallbackNow: Stri
     UpdateInfo(
         version = release.tagName.trim().removePrefix("v"),
         publishedAt = release.publishedAt.ifBlank { fallbackNow },
-        changelog = release.body.ifBlank { "RikkaHub Me ${release.tagName}" },
+        changelog = release.body.ifBlank { "小仆 ${release.tagName}" },
         downloads = release.assets
             .filter { it.name.endsWith(".apk", ignoreCase = true) }
             .map {

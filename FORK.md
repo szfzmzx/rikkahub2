@@ -1,12 +1,12 @@
-# RikkaHub Me —— 个人共存版
+# 小仆 —— 个人共存版
 
 基于 [rikkahub/rikkahub](https://github.com/rikkahub/rikkahub)（AGPL-3.0）的个人分支。
 独立的 `applicationId`，可以和官方版装在同一台手机上，互不覆盖、数据互不干扰。
 
 - 上游基线：`ad2c443`（v3.1.1）
 - 本版包名：`com.rikkahub.me`（debug 变体为 `com.rikkahub.me.debug`）
-- 本版桌面名：`RikkaHub Me`
-- 本版版本：`3.1.3-me`（versionCode 196）
+- 本版桌面名：`小仆`
+- 本版版本：`3.1.5-me`（versionCode 198）
 - 仓库：<https://github.com/szfzmzx/rikkahub2>
 
 ## 与官方版的差异
@@ -14,8 +14,8 @@
 | 项目 | 官方版 | 本版 |
 | --- | --- | --- |
 | applicationId | `me.rerere.rikkahub` | `com.rikkahub.me` |
-| 桌面名 | RikkaHub | RikkaHub Me |
-| 启动图标 | 近黑背景 `#26262A` | 深青背景 `#0E4A44`（只换背景一层，前景不变） |
+| 桌面名 | RikkaHub | **小仆**（刻意起个完全不同的名字，避免在桌面上点错） |
+| 启动图标 | 近黑背景 + Rikka 标志 | **DeepSeek 娘（女仆）同人图**，画面模糊延展铺满画布 |
 | Firebase 统计 / 崩溃上报 | 有 | **已移除**（构建不再需要 `google-services.json`） |
 | 应用内更新检查 | `updates.rikka-ai.com` | **本仓库的 GitHub Releases**（`releases/latest`，tag 即版本号） |
 | 签名 | 官方 keystore | 自己的 keystore（仓库 secrets 已配置），debug 包仅用于验证 |
