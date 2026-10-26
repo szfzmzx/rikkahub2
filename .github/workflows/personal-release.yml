@@ -133,7 +133,7 @@ jobs:
           {
             echo "### 更新内容"
             echo
-            git log --no-merges --pretty=format:'- %s' "$RANGE"
+            git log --no-merges --pretty=format:'- %s' "$RANGE" | grep -v '^- chore(me): 版本号' || true
             echo
             if [ -n "$PREV" ]; then
               echo
@@ -149,4 +149,4 @@ jobs:
           name: 小仆 ${{ github.ref_name }}
           tag_name: ${{ github.ref_name }}
           body_path: release-notes.md
-          files: out/*.apk
+          files: out/*
