@@ -83,9 +83,18 @@ fun UpdateCard(vm: ChatVM) {
     state.onSuccess { info ->
         var showDetail by remember { mutableStateOf(false) }
         var dismissed by remember { mutableStateOf(false) }
-        val current = remember { Version(BuildConfig.VERSION_NAME) }
-        val latest = remember(info) { Version(info.version) }
-        if (latest > current && !dismissed) {
+        // 有 versionCode 就比它（单调递增，不受版本号命名方案影响），否则退回比版本号字符串
+        val hasUpdate = remember(info) {
+            // BuildConfig.VERSION_CODE 是字符串（gradle 里按 String 生成）
+            val localCode = BuildConfig.VERSION_CODE.toIntOrNull()
+            val remoteCode = info.versionCode
+            if (remoteCode != null && remoteCode > 0 && localCode != null) {
+                remoteCode > localCode
+            } else {
+                Version(info.version) > Version(BuildConfig.VERSION_NAME)
+            }
+        }
+        if (hasUpdate && !dismissed) {
             Card(
                 onClick = {
                     showDetail = true

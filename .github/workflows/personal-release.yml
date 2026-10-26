@@ -1,6 +1,6 @@
 name: Personal Release
 
-# 打 tag（tag 必须等于 app/build.gradle.kts 里的 versionName，例如 3.1.2-me）时：
+# 打 tag（tag 必须等于 app/build.gradle.kts 里的 versionName，例如 3.1.1.7）时：
 # 用仓库 secrets 里的 keystore 签出正式包，发布成 GitHub Release。
 # 共存版的应用内更新读的就是本仓库的 releases/latest，所以这个流程产出的包才能自更新。
 
@@ -117,6 +117,10 @@ jobs:
           set -euo pipefail
           mkdir -p out
           cp app/build/outputs/apk/github/release/*universal*.apk "out/rikkahub-me-${GITHUB_REF_NAME}.apk"
+          # 附一个 versionCode 清单：版本号可能换命名方案，应用内据此判断新旧
+          CODE=$(sed -n 's/.*versionCode = \([0-9]*\).*/\1/p' app/build.gradle.kts | head -1)
+          printf '{"versionCode": %s, "versionName": "%s"}\n' "$CODE" "${GITHUB_REF_NAME}" > out/update.json
+          cat out/update.json
           ls -lh out
 
       # 自动生成的说明在本仓库只会吐出 "Full Changelog" 链接（没有 PR），

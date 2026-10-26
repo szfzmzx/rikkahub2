@@ -29,6 +29,10 @@ private const val API_URL = "https://updates.rikka-ai.com/"
 // 个人版直接读自己仓库的 GitHub Releases：tag 就是 versionName，例如 3.1.2-me
 private const val FORK_RELEASES_URL = "https://api.github.com/repos/szfzmzx/rikkahub2/releases/latest"
 
+// 发版时附带的小清单，用来拿 versionCode：版本号可能改命名方案（例如 3.1.6-me -> 3.1.1.7），
+// 只比字符串会把新版本判成旧版本，versionCode 才是单调递增的。
+private const val RELEASE_MANIFEST_ASSET = "update.json"
+
 class UpdateChecker(
     private val client: OkHttpClient,
     appScope: AppScope,
@@ -97,12 +101,45 @@ class UpdateChecker(
             if (response.code == 404) return noUpdate
             if (!response.isSuccessful) throw Exception("GitHub Releases HTTP ${response.code}")
             val release = json.decodeFromString<GitHubRelease>(response.body.string())
-            gitHubReleaseToUpdateInfo(release, java.time.Instant.now().toString())
+            val info = gitHubReleaseToUpdateInfo(release, java.time.Instant.now().toString())
+            val manifestUrl = release.assets
+                .firstOrNull { it.name == RELEASE_MANIFEST_ASSET }
+                ?.browserDownloadUrl
+            // 版本号一样就不用再拉清单了，省一次请求
+            val code = if (info.version == BuildConfig.VERSION_NAME) {
+                null
+            } else {
+                manifestUrl?.let { fetchReleaseVersionCode(it) }
+            }
+            if (code != null && code > 0) info.copy(versionCode = code) else info
         } catch (e: CancellationException) {
             throw e
         } catch (e: Exception) {
             noUpdate
         }
+    }
+
+    /** 读发布清单里的 versionCode；拿不到就返回 null，调用方退回按版本号字符串比较 */
+    private suspend fun fetchReleaseVersionCode(url: String): Int? = try {
+        val response = client.newCall(
+            Request.Builder()
+                .url(url)
+                .get()
+                .addHeader(
+                    "User-Agent",
+                    "RikkaHubMe ${BuildConfig.VERSION_NAME} #${BuildConfig.VERSION_CODE}"
+                )
+                .build()
+        ).await()
+        if (!response.isSuccessful) {
+            null
+        } else {
+            json.decodeFromString<ReleaseManifest>(response.body.string()).versionCode
+        }
+    } catch (e: CancellationException) {
+        throw e
+    } catch (e: Exception) {
+        null
     }
 
     fun downloadUpdate(context: Context, download: UpdateDownload) {
@@ -143,7 +180,9 @@ data class UpdateInfo(
     val version: String,
     val publishedAt: String,
     val changelog: String,
-    val downloads: List<UpdateDownload>
+    val downloads: List<UpdateDownload>,
+    /** 发布清单里的 versionCode；老版本 Release 没有这个资产时为 null */
+    val versionCode: Int? = null,
 )
 
 @Serializable
@@ -152,6 +191,11 @@ internal data class GitHubRelease(
     @SerialName("body") val body: String = "",
     @SerialName("published_at") val publishedAt: String = "",
     @SerialName("assets") val assets: List<GitHubAsset> = emptyList(),
+)
+
+@Serializable
+internal data class ReleaseManifest(
+    @SerialName("versionCode") val versionCode: Int = 0,
 )
 
 @Serializable
