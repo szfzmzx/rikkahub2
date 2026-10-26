@@ -1,6 +1,6 @@
 name: Personal Build
 
-# 个人共存版的日常出包：applicationId = com.rikkahub.me，桌面名 RikkaHub Me
+# 个人共存版的日常出包：applicationId = com.rikkahub.me，桌面名小仆
 # 这里只出 debug 包，用来快速验证“能编译 + 身份正确”；
 # 正式签名包由 personal-release.yml 在打 tag 时产出。
 
@@ -86,8 +86,11 @@ jobs:
           echo "$BADGING" | head -3
           echo "$BADGING" | grep -q "package: name='com.rikkahub.me.debug'" \
             || { echo "::error::applicationId 不是 com.rikkahub.me.debug"; exit 1; }
-          echo "$BADGING" | grep -q "application-label:'RikkaHub Me'" \
-            || { echo "::error::桌面名不是 RikkaHub Me"; exit 1; }
+          # 期望的桌面名从 strings.xml 读，改名时不用再改工作流
+          EXPECTED_NAME=$(sed -n 's:.*<string name="app_name">\(.*\)</string>.*:\1:p' app/src/main/res/values/strings.xml)
+          echo "期望桌面名: $EXPECTED_NAME"
+          echo "$BADGING" | grep -qF "application-label:'$EXPECTED_NAME'" \
+            || { echo "::error::桌面名不是 $EXPECTED_NAME"; exit 1; }
 
       - name: Upload debug APK
         uses: actions/upload-artifact@v4

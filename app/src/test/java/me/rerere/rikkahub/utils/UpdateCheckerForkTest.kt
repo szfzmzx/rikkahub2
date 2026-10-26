@@ -51,7 +51,7 @@ class UpdateCheckerForkTest {
 
         assertEquals("3.1.4-me", info.version)
         assertEquals("2026-10-25T00:00:00Z", info.publishedAt)
-        assertEquals("RikkaHub Me v3.1.4-me", info.changelog)
+        assertEquals("小仆 v3.1.4-me", info.changelog)
         assertTrue(info.downloads.isEmpty())
     }
 

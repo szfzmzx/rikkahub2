@@ -98,8 +98,11 @@ jobs:
           echo "$BADGING" | head -3
           echo "$BADGING" | grep -q "package: name='com.rikkahub.me'" \
             || { echo "::error::release applicationId 不是 com.rikkahub.me"; exit 1; }
-          echo "$BADGING" | grep -q "application-label:'RikkaHub Me'" \
-            || { echo "::error::桌面名不是 RikkaHub Me"; exit 1; }
+          # 期望的桌面名从 strings.xml 读，改名时不用再改工作流
+          EXPECTED_NAME=$(sed -n 's:.*<string name="app_name">\(.*\)</string>.*:\1:p' app/src/main/res/values/strings.xml)
+          echo "期望桌面名: $EXPECTED_NAME"
+          echo "$BADGING" | grep -qF "application-label:'$EXPECTED_NAME'" \
+            || { echo "::error::桌面名不是 $EXPECTED_NAME"; exit 1; }
 
       # 打印签名证书指纹：每次发版都应一致，否则老版本无法覆盖升级
       - name: Verify signature
@@ -119,7 +122,7 @@ jobs:
       - name: Publish release
         uses: softprops/action-gh-release@v2
         with:
-          name: RikkaHub Me ${{ github.ref_name }}
+          name: 小仆 ${{ github.ref_name }}
           tag_name: ${{ github.ref_name }}
           generate_release_notes: true
           files: out/*.apk
