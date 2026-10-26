@@ -2,6 +2,7 @@ package me.rerere.rikkahub.utils
 
 import kotlinx.serialization.json.Json
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Test
@@ -85,6 +86,36 @@ class UpdateCheckerForkTest {
         assertEquals("2026-10-25T00:00:00Z", info.publishedAt)
         assertEquals("小仆 v3.1.1.9", info.changelog)
         assertTrue(info.downloads.isEmpty())
+    }
+
+    @Test
+    fun `version code wins over version name`() {
+        // 换命名方案时的迁移：3.1.1.7 (200) 必须能覆盖已装的 3.1.6-me (199)，
+        // 只按字符串比会把 3.1.1.7 判成旧版本。
+        val info = UpdateInfo(
+            version = "3.1.1.7",
+            publishedAt = "2026-10-26T00:00:00Z",
+            changelog = "",
+            downloads = emptyList(),
+            versionCode = 200,
+        )
+        assertTrue(hasUpdate(info, localVersionName = "3.1.6-me", localVersionCode = "199"))
+        assertFalse(hasUpdate(info, localVersionName = "3.1.1.7", localVersionCode = "200"))
+        assertFalse(hasUpdate(info, localVersionName = "3.1.1.8", localVersionCode = "201"))
+    }
+
+    @Test
+    fun `falls back to version name without manifest`() {
+        val info = UpdateInfo(
+            version = "3.1.1.8",
+            publishedAt = "2026-10-26T00:00:00Z",
+            changelog = "",
+            downloads = emptyList(),
+            versionCode = null,
+        )
+        assertTrue(hasUpdate(info, localVersionName = "3.1.1.7", localVersionCode = "200"))
+        assertFalse(hasUpdate(info, localVersionName = "3.1.1.8", localVersionCode = "201"))
+        assertFalse(hasUpdate(info, localVersionName = "3.1.1.9", localVersionCode = "202"))
     }
 
     @Test

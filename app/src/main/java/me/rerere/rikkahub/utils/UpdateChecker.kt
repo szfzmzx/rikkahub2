@@ -206,6 +206,26 @@ internal data class GitHubAsset(
 )
 
 /**
+ * 判断有没有新版本。
+ *
+ * 优先比 versionCode：版本号命名方案换过（`3.1.6-me` → `3.1.1.7`），按字符串比会把新版本判成旧版本。
+ * Release 没带 update.json（老版本）时退回按版本号字符串比较。
+ */
+internal fun hasUpdate(
+    info: UpdateInfo,
+    localVersionName: String,
+    localVersionCode: String,
+): Boolean {
+    val remoteCode = info.versionCode
+    val code = localVersionCode.toIntOrNull()
+    return if (remoteCode != null && remoteCode > 0 && code != null) {
+        remoteCode > code
+    } else {
+        Version(info.version) > Version(localVersionName)
+    }
+}
+
+/**
  * 把 GitHub Release 映射成应用内更新用的 [UpdateInfo]。
  *
  * tag 直接当版本号（发布时保证 tag == versionName），只保留 `.apk` 资产；

@@ -46,6 +46,7 @@ import me.rerere.rikkahub.ui.hooks.useThrottle
 import me.rerere.rikkahub.ui.pages.chat.ChatVM
 import me.rerere.rikkahub.utils.UpdateDownload
 import me.rerere.rikkahub.utils.Version
+import me.rerere.rikkahub.utils.hasUpdate
 import me.rerere.rikkahub.utils.onError
 import me.rerere.rikkahub.utils.onSuccess
 import me.rerere.rikkahub.utils.toLocalDateTime
@@ -83,18 +84,10 @@ fun UpdateCard(vm: ChatVM) {
     state.onSuccess { info ->
         var showDetail by remember { mutableStateOf(false) }
         var dismissed by remember { mutableStateOf(false) }
-        // 有 versionCode 就比它（单调递增，不受版本号命名方案影响），否则退回比版本号字符串
-        val hasUpdate = remember(info) {
-            // BuildConfig.VERSION_CODE 是字符串（gradle 里按 String 生成）
-            val localCode = BuildConfig.VERSION_CODE.toIntOrNull()
-            val remoteCode = info.versionCode
-            if (remoteCode != null && remoteCode > 0 && localCode != null) {
-                remoteCode > localCode
-            } else {
-                Version(info.version) > Version(BuildConfig.VERSION_NAME)
-            }
+        val shouldPromptUpdate = remember(info) {
+            hasUpdate(info, BuildConfig.VERSION_NAME, BuildConfig.VERSION_CODE)
         }
-        if (hasUpdate && !dismissed) {
+        if (shouldPromptUpdate && !dismissed) {
             Card(
                 onClick = {
                     showDetail = true
