@@ -9,6 +9,9 @@ import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.width
+import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -148,6 +151,21 @@ fun UpdateCard(vm: ChatVM) {
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.primary
                     )
+                    // 主按钮：只有一个包时直接给出「下载并安装」，不用让人去列表里找
+                    val primaryDownload = info.downloads.firstOrNull()
+                    if (primaryDownload != null) {
+                        Button(
+                            onClick = { downloadHandler(primaryDownload) },
+                            modifier = Modifier.fillMaxWidth(),
+                        ) {
+                            Icon(
+                                imageVector = HugeIcons.Download01,
+                                contentDescription = null
+                            )
+                            Spacer(Modifier.width(8.dp))
+                            Text(stringResource(R.string.update_card_download_install))
+                        }
+                    }
                     MarkdownBlock(
                         content = info.changelog,
                         modifier = Modifier
@@ -156,7 +174,7 @@ fun UpdateCard(vm: ChatVM) {
                             .verticalScroll(rememberScrollState()),
                         style = MaterialTheme.typography.bodyMedium
                     )
-                    info.downloads.fastForEach { downloadItem ->
+                    if (info.downloads.size > 1) info.downloads.fastForEach { downloadItem ->
                         OutlinedCard(
                             onClick = {
                                 downloadHandler(downloadItem)

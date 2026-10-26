@@ -1139,6 +1139,7 @@
   <string name="update_card_check_failed">Check update failed</string>
   <string name="update_card_close">Close</string>
   <string name="update_card_downloading">Downloading, please check status bar for progress</string>
+  <string name="update_card_download_install">Download and install</string>
   <string name="update_card_new_version_found">New version found %s</string>
   <string name="update_card_unknown_error">Unknown error</string>
   <string name="upload_file">Upload File</string>

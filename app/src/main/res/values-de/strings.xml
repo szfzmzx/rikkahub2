@@ -1097,6 +1097,7 @@
   <string name="update_card_check_failed">Updateprüfung fehlgeschlagen</string>
   <string name="update_card_close">Schließen</string>
   <string name="update_card_downloading">Wird heruntergeladen, den Fortschritt findest du in der Statusleiste</string>
+  <string name="update_card_download_install">Herunterladen und installieren</string>
   <string name="update_card_new_version_found">Neue Version gefunden: %s</string>
   <string name="update_card_unknown_error">Unbekannter Fehler</string>
   <string name="upload_file">Datei hochladen</string>

@@ -1056,6 +1056,7 @@ mDNSアドレス: .localホスト名を使用し、IPを知らなくても同じ
   <string name="update_card_check_failed">更新チェックに失敗しました</string>
   <string name="update_card_close">閉じる</string>
   <string name="update_card_downloading">ダウンロード中です。進捗はステータスバーでご確認ください</string>
+  <string name="update_card_download_install">ダウンロードしてインストール</string>
   <string name="update_card_new_version_found">新しいバージョンが見つかりました %s</string>
   <string name="update_card_unknown_error">不明なエラー</string>
   <string name="upload_file">ファイルをアップロード</string>

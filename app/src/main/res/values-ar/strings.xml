@@ -1287,6 +1287,7 @@
   <string name="update_card_check_failed">فشل التحقق من التحديث</string>
   <string name="update_card_close">إغلاق</string>
   <string name="update_card_downloading">جارٍ التنزيل، يرجى التحقق من شريط الحالة لمتابعة التقدم</string>
+  <string name="update_card_download_install">تنزيل وتثبيت</string>
   <string name="update_card_new_version_found">تم العثور على إصدار جديد %s</string>
   <string name="update_card_unknown_error">خطأ غير معروف</string>
   <string name="upload_file">رفع ملف</string>

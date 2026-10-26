@@ -119,10 +119,30 @@ jobs:
           cp app/build/outputs/apk/github/release/*universal*.apk "out/rikkahub-me-${GITHUB_REF_NAME}.apk"
           ls -lh out
 
+      # 自动生成的说明在本仓库只会吐出 "Full Changelog" 链接（没有 PR），
+      # 应用内会把它当成变更说明显示，点一下还跳去 compare 页。改成自己按提交生成。
+      - name: Generate release notes
+        run: |
+          set -euo pipefail
+          PREV=$(git describe --tags --abbrev=0 "${{ github.ref_name }}^" 2>/dev/null || true)
+          if [ -n "$PREV" ]; then RANGE="$PREV..${{ github.ref_name }}"; else RANGE="${{ github.ref_name }}"; fi
+          {
+            echo "### 更新内容"
+            echo
+            git log --no-merges --pretty=format:'- %s' "$RANGE"
+            echo
+            if [ -n "$PREV" ]; then
+              echo
+              echo "> 完整对比：https://github.com/${GITHUB_REPOSITORY}/compare/${PREV}...${{ github.ref_name }}"
+            fi
+          } > release-notes.md
+          echo "----- release-notes.md -----"
+          cat release-notes.md
+
       - name: Publish release
         uses: softprops/action-gh-release@v2
         with:
           name: 小仆 ${{ github.ref_name }}
           tag_name: ${{ github.ref_name }}
-          generate_release_notes: true
+          body_path: release-notes.md
           files: out/*.apk

@@ -124,6 +124,9 @@ git tag 3.1.3-me
 git push origin 3.1.3-me
 ```
 
+Release 说明由工作流按提交自动生成（`git log 上一个tag..当前tag`），不用 GitHub 的
+`generate_release_notes`——本仓库没有 PR，那个只会生成一行 "Full Changelog" 链接，
+而应用内会把 Release 正文当作变更说明显示，点一下就跳到 compare 页。
 tag 推送后会依次：校验 tag == `versionName` → 用 secrets 里的 keystore 签 `assembleGithubRelease` →
 aapt2 校验 `applicationId` / 桌面名 → 把 `rikkahub-me-<tag>.apk` 发到 GitHub Releases（自动生成变更说明）。
 

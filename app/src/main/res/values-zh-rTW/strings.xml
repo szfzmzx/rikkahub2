@@ -1054,6 +1054,7 @@
   <string name="update_card_check_failed">檢查更新失敗</string>
   <string name="update_card_close">關閉</string>
   <string name="update_card_downloading">正在下載，請查看狀態列以瞭解進度</string>
+  <string name="update_card_download_install">下載並安裝</string>
   <string name="update_card_new_version_found">發現新版本 %s</string>
   <string name="update_card_unknown_error">未知錯誤</string>
   <string name="upload_file">上傳檔案</string>
