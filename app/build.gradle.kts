@@ -25,8 +25,8 @@ android {
         applicationId = "com.rikkahub.me"
         minSdk = 26
         targetSdk = 37
-        versionCode = 201
-        versionName = "3.1.1.8"
+        versionCode = 202
+        versionName = "3.1.1.9"
 
         // 个人版标记：应用内更新改读自己仓库的 GitHub Releases
         buildConfigField("boolean", "IS_FORK", "true")
