@@ -9,8 +9,6 @@ plugins {
     alias(libs.plugins.kotlin.compose)
     alias(libs.plugins.kotlin.serialization)
     alias(libs.plugins.ksp)
-    alias(libs.plugins.google.services)
-    alias(libs.plugins.firebase.crashlytics)
     alias(libs.plugins.baselineprofile)
 }
 
@@ -23,11 +21,14 @@ android {
     }
 
     defaultConfig {
-        applicationId = "me.rerere.rikkahub"
+        applicationId = "com.rikkahub.me"
         minSdk = 26
         targetSdk = 37
-        versionCode = 195
-        versionName = "3.1.2"
+        versionCode = 203
+        versionName = "3.1.2.1"
+
+        // 个人版：更新源读取自己的 GitHub Releases
+        buildConfigField("boolean", "IS_FORK", "true")
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
 
@@ -219,11 +220,6 @@ dependencies {
     implementation(libs.androidx.navigation3.ui)
     implementation(libs.androidx.lifecycle.viewmodel.navigation3)
     implementation(libs.androidx.material3.adaptive.navigation3)
-
-    // Firebase
-    implementation(platform(libs.firebase.bom))
-    implementation(libs.firebase.analytics)
-    implementation(libs.firebase.crashlytics)
 
     // DataStore
     implementation(libs.androidx.datastore.preferences)

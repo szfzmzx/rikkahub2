@@ -7,7 +7,7 @@
   <string name="about_page_version">Version</string>
   <string name="about_page_website">Website</string>
   <string name="add">Add</string>
-  <string name="app_name">RikkaHub</string>
+  <string name="app_name">小仆</string>
   <string name="asr_button_content_description">Speech Recognition</string>
   <string name="asr_button_stop">Stop</string>
   <string name="assistant_detail_basic_desc">Configure name, avatar, model, and parameters</string>
@@ -1136,6 +1136,7 @@
   <string name="update_card_check_failed">Check update failed</string>
   <string name="update_card_close">Close</string>
   <string name="update_card_downloading">Downloading, please check status bar for progress</string>
+  <string name="update_card_download_install">Download and install</string>
   <string name="update_card_new_version_found">New version found %s</string>
   <string name="update_card_unknown_error">Unknown error</string>
   <string name="upload_file">Upload File</string>
@@ -1700,6 +1701,8 @@
   <string name="workspace_ssh_editor_auth_method">Method</string>
   <string name="workspace_ssh_editor_password">Password</string>
   <string name="workspace_ssh_editor_private_key">Private key</string>
+  <string name="workspace_ssh_editor_auth_none">None</string>
+  <string name="workspace_ssh_editor_auth_none_desc">Server lets you log in without a password or key</string>
   <string name="workspace_ssh_editor_saved_keep">Saved. Leave empty to keep it</string>
   <string name="workspace_ssh_editor_private_key_desc">Ed25519, ECDSA and RSA private keys in OpenSSH or PEM format</string>
   <string name="workspace_ssh_editor_import_key">Import from file</string>

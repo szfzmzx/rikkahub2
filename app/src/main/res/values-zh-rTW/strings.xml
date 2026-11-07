@@ -7,7 +7,7 @@
   <string name="about_page_version">版本</string>
   <string name="about_page_website">官網</string>
   <string name="add">添加</string>
-  <string name="app_name">RikkaHub</string>
+  <string name="app_name">小仆</string>
   <string name="asr_button_content_description">語音辨識</string>
   <string name="asr_button_stop">停止</string>
   <string name="assistant_detail_basic_desc">設定名稱、頭像、模型與參數</string>
@@ -1053,6 +1053,7 @@
   <string name="update_card_check_failed">檢查更新失敗</string>
   <string name="update_card_close">關閉</string>
   <string name="update_card_downloading">正在下載，請查看狀態列以瞭解進度</string>
+  <string name="update_card_download_install">下載並安裝</string>
   <string name="update_card_new_version_found">發現新版本 %s</string>
   <string name="update_card_unknown_error">未知錯誤</string>
   <string name="upload_file">上傳檔案</string>
@@ -1697,6 +1698,8 @@
   <string name="workspace_ssh_editor_auth_method">方法</string>
   <string name="workspace_ssh_editor_password">密碼</string>
   <string name="workspace_ssh_editor_private_key">私鑰</string>
+  <string name="workspace_ssh_editor_auth_none">無認證</string>
+  <string name="workspace_ssh_editor_auth_none_desc">伺服器允許直接登入，不需要密碼或金鑰</string>
   <string name="workspace_ssh_editor_saved_keep">已儲存。留空即可保留</string>
   <string name="workspace_ssh_editor_private_key_desc">OpenSSH 或 PEM 格式的 Ed25519、ECDSA 與 RSA 私密金鑰</string>
   <string name="workspace_ssh_editor_import_key">從檔案匯入</string>

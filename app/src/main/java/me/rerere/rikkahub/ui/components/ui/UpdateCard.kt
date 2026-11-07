@@ -7,8 +7,11 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -43,6 +46,7 @@ import me.rerere.rikkahub.ui.hooks.useThrottle
 import me.rerere.rikkahub.ui.pages.chat.ChatVM
 import me.rerere.rikkahub.utils.UpdateDownload
 import me.rerere.rikkahub.utils.Version
+import me.rerere.rikkahub.utils.hasUpdate
 import me.rerere.rikkahub.utils.onError
 import me.rerere.rikkahub.utils.onSuccess
 import me.rerere.rikkahub.utils.toLocalDateTime
@@ -80,9 +84,10 @@ fun UpdateCard(vm: ChatVM) {
     state.onSuccess { info ->
         var showDetail by remember { mutableStateOf(false) }
         var dismissed by remember { mutableStateOf(false) }
-        val current = remember { Version(BuildConfig.VERSION_NAME) }
-        val latest = remember(info) { Version(info.version) }
-        if (latest > current && !dismissed) {
+        val shouldPromptUpdate = remember(info) {
+            hasUpdate(info, BuildConfig.VERSION_NAME, BuildConfig.VERSION_CODE)
+        }
+        if (shouldPromptUpdate && !dismissed) {
             Card(
                 onClick = {
                     showDetail = true
@@ -148,6 +153,17 @@ fun UpdateCard(vm: ChatVM) {
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.primary
                     )
+                    val primaryDownload = info.downloads.firstOrNull()
+                    if (primaryDownload != null) {
+                        Button(
+                            onClick = { downloadHandler(primaryDownload) },
+                            modifier = Modifier.fillMaxWidth(),
+                        ) {
+                            Icon(HugeIcons.Download01, contentDescription = null)
+                            Spacer(Modifier.width(8.dp))
+                            Text(stringResource(R.string.update_card_download_install))
+                        }
+                    }
                     MarkdownBlock(
                         content = info.changelog,
                         modifier = Modifier
@@ -156,7 +172,7 @@ fun UpdateCard(vm: ChatVM) {
                             .verticalScroll(rememberScrollState()),
                         style = MaterialTheme.typography.bodyMedium
                     )
-                    info.downloads.fastForEach { downloadItem ->
+                    if (info.downloads.size > 1) info.downloads.fastForEach { downloadItem ->
                         OutlinedCard(
                             onClick = {
                                 downloadHandler(downloadItem)

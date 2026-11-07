@@ -1,0 +1,100 @@
+name: Personal Build
+
+# 个人共存版的日常出包：applicationId = com.rikkahub.me，桌面名小仆
+# 这里只出 debug 包，用来快速验证“能编译 + 身份正确”；
+# 正式签名包由 personal-release.yml 在打 tag 时产出。
+
+on:
+  push:
+    branches: [master]
+    paths-ignore:
+      - '**.md'
+  workflow_dispatch:
+
+concurrency:
+  group: personal-build-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 90
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          # material3 依赖 material-color-utilities 子模块
+          submodules: recursive
+
+      - name: Set up JDK 21
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
+
+      # runner 镜像自带 Android SDK 与 cmdline-tools，无需 android-actions/setup-android
+      # （那个 action 会执行 `sdkmanager "tools"`，该包已下架，会直接失败）
+      - name: Install SDK components
+        run: |
+          set -euo pipefail
+          SDKM=$(command -v sdkmanager || ls "$ANDROID_HOME"/cmdline-tools/*/bin/sdkmanager | head -1)
+          echo "sdkmanager: $SDKM"
+          yes | "$SDKM" --licenses > /dev/null || true
+          "$SDKM" "platforms;android-37.2" "build-tools;37.0.0"
+          ls "$ANDROID_HOME/platforms"
+
+      - name: Set up pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 11
+
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+          cache-dependency-path: web-ui/pnpm-lock.yaml
+
+      # :web 的 preBuild 会跑 pnpm run build，这里先把依赖装好
+      - name: Install web-ui dependencies
+        working-directory: web-ui
+        run: pnpm install --frozen-lockfile
+
+      - name: Cache Gradle
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.gradle/caches
+            ~/.gradle/wrapper
+          key: ${{ runner.os }}-gradle-${{ hashFiles('**/*.gradle*', '**/gradle-wrapper.properties', 'gradle/libs.versions.toml') }}
+          restore-keys: |
+            ${{ runner.os }}-gradle-
+
+      - name: Assemble debug APK
+        run: ./gradlew assembleGithubDebug --stacktrace
+
+      - name: Verify debug identity
+        run: |
+          set -euo pipefail
+          APK=$(ls app/build/outputs/apk/github/debug/*universal*.apk | head -1)
+          AAPT2="$(ls -d "$ANDROID_HOME"/build-tools/* | sort -V | tail -1)/aapt2"
+          BADGING=$("$AAPT2" dump badging "$APK")
+          echo "$BADGING" | head -3
+          echo "$BADGING" | grep -q "package: name='com.rikkahub.me.debug'" \
+            || { echo "::error::applicationId 不是 com.rikkahub.me.debug"; exit 1; }
+          # 期望的桌面名从 strings.xml 读，改名时不用再改工作流
+          EXPECTED_NAME=$(sed -n 's:.*<string name="app_name">\(.*\)</string>.*:\1:p' app/src/main/res/values/strings.xml)
+          echo "期望桌面名: $EXPECTED_NAME"
+          echo "$BADGING" | grep -qF "application-label:'$EXPECTED_NAME'" \
+            || { echo "::error::桌面名不是 $EXPECTED_NAME"; exit 1; }
+
+      - name: Upload debug APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: rikkahub-me-debug
+          path: app/build/outputs/apk/github/debug/*.apk
+          if-no-files-found: error

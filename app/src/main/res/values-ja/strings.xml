@@ -7,7 +7,7 @@
   <string name="about_page_version">バージョン</string>
   <string name="about_page_website">ウェブサイト</string>
   <string name="add">追加</string>
-  <string name="app_name">RikkaHub</string>
+  <string name="app_name">小仆</string>
   <string name="asr_button_content_description">音声認識</string>
   <string name="asr_button_stop">停止</string>
   <string name="assistant_detail_basic_desc">名前、アバター、モデル、パラメータを設定</string>
@@ -1055,6 +1055,7 @@ mDNSアドレス: .localホスト名を使用し、IPを知らなくても同じ
   <string name="update_card_check_failed">更新チェックに失敗しました</string>
   <string name="update_card_close">閉じる</string>
   <string name="update_card_downloading">ダウンロード中です。進捗はステータスバーでご確認ください</string>
+  <string name="update_card_download_install">ダウンロードしてインストール</string>
   <string name="update_card_new_version_found">新しいバージョンが見つかりました %s</string>
   <string name="update_card_unknown_error">不明なエラー</string>
   <string name="upload_file">ファイルをアップロード</string>
@@ -1699,6 +1700,8 @@ mDNSアドレス: .localホスト名を使用し、IPを知らなくても同じ
   <string name="workspace_ssh_editor_auth_method">方法</string>
   <string name="workspace_ssh_editor_password">パスワード</string>
   <string name="workspace_ssh_editor_private_key">秘密鍵</string>
+  <string name="workspace_ssh_editor_auth_none">なし</string>
+  <string name="workspace_ssh_editor_auth_none_desc">サーバーはパスワードや鍵なしでのログインを許可しています</string>
   <string name="workspace_ssh_editor_saved_keep">保存済み。空欄のままにすると変更されません</string>
   <string name="workspace_ssh_editor_private_key_desc">OpenSSH または PEM 形式の Ed25519、ECDSA、RSA 秘密鍵</string>
   <string name="workspace_ssh_editor_import_key">ファイルからインポート</string>

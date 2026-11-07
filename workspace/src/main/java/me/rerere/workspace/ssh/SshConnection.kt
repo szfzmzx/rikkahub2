@@ -289,6 +289,8 @@ internal class SshConnection private constructor(
                         throw IOException("Invalid SSH private key or passphrase for $label: ${e.message}", e)
                     }
                 }
+
+                SshAuthType.NONE -> Unit
             }
             return jsch
         }
@@ -307,6 +309,7 @@ internal class SshConnection private constructor(
                     }
 
                     SshAuthType.PRIVATE_KEY -> setConfig("PreferredAuthentications", "publickey")
+                    SshAuthType.NONE -> setConfig("PreferredAuthentications", "none")
                 }
                 setServerAliveInterval(KEEPALIVE_INTERVAL_MS)
                 serverAliveCountMax = KEEPALIVE_COUNT_MAX

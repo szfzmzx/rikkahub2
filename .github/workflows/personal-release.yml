@@ -1,0 +1,152 @@
+name: Personal Release
+
+# 打 tag（tag 必须等于 app/build.gradle.kts 里的 versionName，例如 3.1.1.7）时：
+# 用仓库 secrets 里的 keystore 签出正式包，发布成 GitHub Release。
+# 共存版的应用内更新读的就是本仓库的 releases/latest，所以这个流程产出的包才能自更新。
+
+on:
+  push:
+    tags:
+      - '[0-9]*'
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    timeout-minutes: 90
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          submodules: recursive
+
+      - name: Set up JDK 21
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
+
+      - name: Install SDK components
+        run: |
+          set -euo pipefail
+          SDKM=$(command -v sdkmanager || ls "$ANDROID_HOME"/cmdline-tools/*/bin/sdkmanager | head -1)
+          echo "sdkmanager: $SDKM"
+          yes | "$SDKM" --licenses > /dev/null || true
+          "$SDKM" "platforms;android-37.2" "build-tools;37.0.0"
+
+      - name: Set up pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 11
+
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+          cache-dependency-path: web-ui/pnpm-lock.yaml
+
+      - name: Install web-ui dependencies
+        working-directory: web-ui
+        run: pnpm install --frozen-lockfile
+
+      - name: Cache Gradle
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.gradle/caches
+            ~/.gradle/wrapper
+          key: ${{ runner.os }}-gradle-${{ hashFiles('**/*.gradle*', '**/gradle-wrapper.properties', 'gradle/libs.versions.toml') }}
+          restore-keys: |
+            ${{ runner.os }}-gradle-
+
+      # tag 与 versionName 不一致会让应用内更新的版本比较永远错位，这里直接拦下来
+      - name: Verify tag matches versionName
+        run: |
+          set -euo pipefail
+          TAG="${GITHUB_REF_NAME}"
+          VER=$(sed -n 's/^[[:space:]]*versionName = "\(.*\)"/\1/p' app/build.gradle.kts | head -1)
+          echo "tag=$TAG versionName=$VER"
+          [ -n "$VER" ] || { echo "::error::读取 versionName 失败"; exit 1; }
+          [ "$TAG" = "$VER" ] || { echo "::error::tag($TAG) 与 versionName($VER) 不一致"; exit 1; }
+
+      - name: Prepare signing config
+        env:
+          KEYSTORE_BASE64: ${{ secrets.KEYSTORE_BASE64 }}
+          STORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
+          KEY_ALIAS: ${{ secrets.KEY_ALIAS }}
+          KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
+        run: |
+          set -euo pipefail
+          [ -n "$KEYSTORE_BASE64" ] || { echo "::error::缺少 KEYSTORE_BASE64 secret"; exit 1; }
+          echo "$KEYSTORE_BASE64" | base64 -d > app/app.key
+          printf 'storeFile=app.key\nstorePassword=%s\nkeyAlias=%s\nkeyPassword=%s\n' \
+            "$STORE_PASSWORD" "$KEY_ALIAS" "$KEY_PASSWORD" > local.properties
+
+      - name: Assemble release APK
+        run: ./gradlew assembleGithubRelease --stacktrace
+
+      - name: Verify release identity
+        run: |
+          set -euo pipefail
+          APK=$(ls app/build/outputs/apk/github/release/*universal*.apk | head -1)
+          AAPT2="$(ls -d "$ANDROID_HOME"/build-tools/* | sort -V | tail -1)/aapt2"
+          BADGING=$("$AAPT2" dump badging "$APK")
+          echo "$BADGING" | head -3
+          echo "$BADGING" | grep -q "package: name='com.rikkahub.me'" \
+            || { echo "::error::release applicationId 不是 com.rikkahub.me"; exit 1; }
+          # 期望的桌面名从 strings.xml 读，改名时不用再改工作流
+          EXPECTED_NAME=$(sed -n 's:.*<string name="app_name">\(.*\)</string>.*:\1:p' app/src/main/res/values/strings.xml)
+          echo "期望桌面名: $EXPECTED_NAME"
+          echo "$BADGING" | grep -qF "application-label:'$EXPECTED_NAME'" \
+            || { echo "::error::桌面名不是 $EXPECTED_NAME"; exit 1; }
+
+      # 打印签名证书指纹：每次发版都应一致，否则老版本无法覆盖升级
+      - name: Verify signature
+        run: |
+          set -euo pipefail
+          APK=$(ls app/build/outputs/apk/github/release/*universal*.apk | head -1)
+          APKSIGNER="$(ls -d "$ANDROID_HOME"/build-tools/* | sort -V | tail -1)/apksigner"
+          "$APKSIGNER" verify --print-certs "$APK" | head -12
+
+      - name: Prepare release asset
+        run: |
+          set -euo pipefail
+          mkdir -p out
+          cp app/build/outputs/apk/github/release/*universal*.apk "out/rikkahub-me-${GITHUB_REF_NAME}.apk"
+          # 附一个 versionCode 清单：版本号可能换命名方案，应用内据此判断新旧
+          CODE=$(sed -n 's/.*versionCode = \([0-9]*\).*/\1/p' app/build.gradle.kts | head -1)
+          printf '{"versionCode": %s, "versionName": "%s"}\n' "$CODE" "${GITHUB_REF_NAME}" > out/update.json
+          cat out/update.json
+          ls -lh out
+
+      # 自动生成的说明在本仓库只会吐出 "Full Changelog" 链接（没有 PR），
+      # 应用内会把它当成变更说明显示，点一下还跳去 compare 页。改成自己按提交生成。
+      - name: Generate release notes
+        run: |
+          set -euo pipefail
+          PREV=$(git describe --tags --abbrev=0 "${{ github.ref_name }}^" 2>/dev/null || true)
+          if [ -n "$PREV" ]; then RANGE="$PREV..${{ github.ref_name }}"; else RANGE="${{ github.ref_name }}"; fi
+          {
+            echo "### 更新内容"
+            echo
+            git log --no-merges --pretty=format:'- %s' "$RANGE" | grep -v '^- chore(me): 版本号' || true
+            echo
+            if [ -n "$PREV" ]; then
+              echo
+              echo "> 完整对比：https://github.com/${GITHUB_REPOSITORY}/compare/${PREV}...${{ github.ref_name }}"
+            fi
+          } > release-notes.md
+          echo "----- release-notes.md -----"
+          cat release-notes.md
+
+      - name: Publish release
+        uses: softprops/action-gh-release@v2
+        with:
+          name: 小仆 ${{ github.ref_name }}
+          tag_name: ${{ github.ref_name }}
+          body_path: release-notes.md
+          files: out/*
