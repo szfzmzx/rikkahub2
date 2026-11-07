@@ -128,17 +128,14 @@ jobs:
       - name: Generate release notes
         run: |
           set -euo pipefail
-          PREV=$(git describe --tags --abbrev=0 "${{ github.ref_name }}^" 2>/dev/null || true)
-          if [ -n "$PREV" ]; then RANGE="$PREV..${{ github.ref_name }}"; else RANGE="${{ github.ref_name }}"; fi
           {
             echo "### 更新内容"
             echo
-            git log --no-merges --pretty=format:'- %s' "$RANGE" | grep -v '^- chore(me): 版本号' || true
+            git log --no-merges --pretty=format:'- %s' "${{ github.ref_name }}" \
+              | grep -E '^- (feat|fix|test|chore|docs)\\((me|update|ci|release)\\):|同步上游' \
+              | head -20 || true
             echo
-            if [ -n "$PREV" ]; then
-              echo
-              echo "> 完整对比：https://github.com/${GITHUB_REPOSITORY}/compare/${PREV}...${{ github.ref_name }}"
-            fi
+            echo "> 上游基线：RikkaHub 3.1.2"
           } > release-notes.md
           echo "----- release-notes.md -----"
           cat release-notes.md
