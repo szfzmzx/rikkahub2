@@ -135,7 +135,8 @@ jobs:
               | grep -E '^- (feat|fix|test|chore|docs)\\((me|update|ci|release)\\):|同步上游' \
               | head -20 || true
             echo
-            echo "> 上游基线：RikkaHub 3.1.2"
+            # 版本号规则是 <上游版本>.<本地修订号>，去掉最后一段就是上游基线
+            echo "> 上游基线：RikkaHub ${GITHUB_REF_NAME%.*}"
           } > release-notes.md
           echo "----- release-notes.md -----"
           cat release-notes.md
