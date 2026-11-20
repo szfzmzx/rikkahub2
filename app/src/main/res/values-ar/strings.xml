@@ -7,7 +7,7 @@
   <string name="about_page_version">الإصدار</string>
   <string name="about_page_website">الموقع الإلكتروني</string>
   <string name="add">إضافة</string>
-  <string name="app_name">RikkaHub</string>
+  <string name="app_name">小仆</string>
   <string name="asr_button_content_description">التعرف على الكلام</string>
   <string name="asr_button_stop">إيقاف</string>
   <string name="assistant_detail_basic_desc">ضبط الاسم والصورة الرمزية والنموذج والمعلمات</string>
@@ -1286,6 +1286,7 @@
   <string name="update_card_check_failed">فشل التحقق من التحديث</string>
   <string name="update_card_close">إغلاق</string>
   <string name="update_card_downloading">جارٍ التنزيل، يرجى التحقق من شريط الحالة لمتابعة التقدم</string>
+  <string name="update_card_download_install">تنزيل وتثبيت</string>
   <string name="update_card_new_version_found">تم العثور على إصدار جديد %s</string>
   <string name="update_card_unknown_error">خطأ غير معروف</string>
   <string name="upload_file">رفع ملف</string>
@@ -1697,6 +1698,8 @@
   <string name="workspace_ssh_editor_auth_method">الطريقة</string>
   <string name="workspace_ssh_editor_password">كلمة المرور</string>
   <string name="workspace_ssh_editor_private_key">المفتاح الخاص</string>
+  <string name="workspace_ssh_editor_auth_none">بدون مصادقة</string>
+  <string name="workspace_ssh_editor_auth_none_desc">يسمح الخادم بتسجيل الدخول دون كلمة مرور أو مفتاح</string>
   <string name="workspace_ssh_editor_saved_keep">محفوظ. اتركه فارغًا لإبقائه دون تغيير</string>
   <string name="workspace_ssh_editor_private_key_desc">مفاتيح خاصة Ed25519 وECDSA وRSA بتنسيق OpenSSH أو PEM</string>
   <string name="workspace_ssh_editor_import_key">استيراد من ملف</string>

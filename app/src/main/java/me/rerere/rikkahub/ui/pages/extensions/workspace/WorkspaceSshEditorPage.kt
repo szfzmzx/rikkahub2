@@ -383,6 +383,7 @@ private fun CardGroupScope.authItems(
         val options = listOf(
             SshAuthType.PASSWORD to stringResource(R.string.workspace_ssh_editor_password),
             SshAuthType.PRIVATE_KEY to stringResource(R.string.workspace_ssh_editor_private_key),
+            SshAuthType.NONE to stringResource(R.string.workspace_ssh_editor_auth_none),
         )
         SingleChoiceSegmentedButtonRow(modifier = Modifier.fillMaxWidth()) {
             options.forEachIndexed { index, (type, label) ->
@@ -445,6 +446,11 @@ private fun CardGroupScope.authItems(
                 )
             }
         }
+
+        SshAuthType.NONE -> formItem(
+            headlineContent = { Text(stringResource(R.string.workspace_ssh_editor_auth_none)) },
+            supportingContent = { Text(stringResource(R.string.workspace_ssh_editor_auth_none_desc)) },
+        ) {}
     }
 }
 

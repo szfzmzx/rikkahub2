@@ -8,6 +8,8 @@ import java.util.Base64
 enum class SshAuthType {
     PASSWORD,
     PRIVATE_KEY,
+    /** 无认证: SSH 服务器直接接受 none 认证。 */
+    NONE,
 }
 
 /** 已信任的主机公钥 */
